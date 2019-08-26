@@ -323,11 +323,8 @@ class GroceryGround(GazeboEnvBase):
                  image_with_internal_states=False,
                  task_name='goal',
                  agent_type='pioneer2dx_noplugin',
-<<<<<<< HEAD
-=======
                  fail_distance_thresh=3,
                  max_steps=200,
->>>>>>> allow adjust grocery_ground max_steps and max_failure_distance, also resolve gym.Space.DiscreteSequence not supported when _spec_from_gym_space
                  port=None,
                  resized_image_size=(64, 64),
                  data_format='channels_last'):
