@@ -21,7 +21,6 @@ import gin
 import numpy as np
 
 import social_bot.pygazebo as gazebo
-from social_bot.teacher import DiscreteSequence
 
 
 @gin.configurable
@@ -146,8 +145,10 @@ class GazeboEnvBase(gym.Env):
                 shape=obs_sample['states'].shape,
                 dtype=np.float32)
         if 'sentence' in obs_sample.keys():
-            sentence_space = DiscreteSequence(vocab_size,
-                                              len(obs_sample['sentence']))
+            # using MultiDiscrete instead of DiscreteSequence so gym
+            # _spec_from_gym_space won't complain.
+            sentence_space = gym.spaces.MultiDiscrete(
+                [vocab_size] * len(obs_sample['sentence']))
             ob_space_dict['sentence'] = sentence_space
         ob_space = gym.spaces.Dict(ob_space_dict)
         return ob_space

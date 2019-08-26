@@ -34,8 +34,7 @@ import social_bot
 from social_bot import teacher
 from social_bot.envs.gazebo_base import GazeboEnvBase
 from social_bot.teacher import TeacherAction
-from social_bot.teacher import DiscreteSequence
-from social_bot.teacher_tasks import GoalTask
+from social_bot import teacher_tasks
 import social_bot.pygazebo as gazebo
 
 
@@ -324,6 +323,11 @@ class GroceryGround(GazeboEnvBase):
                  image_with_internal_states=False,
                  task_name='goal',
                  agent_type='pioneer2dx_noplugin',
+<<<<<<< HEAD
+=======
+                 fail_distance_thresh=3,
+                 max_steps=200,
+>>>>>>> allow adjust grocery_ground max_steps and max_failure_distance, also resolve gym.Space.DiscreteSequence not supported when _spec_from_gym_space
                  port=None,
                  resized_image_size=(64, 64),
                  data_format='channels_last'):
@@ -357,9 +361,9 @@ class GroceryGround(GazeboEnvBase):
         task_group = teacher.TaskGroup()
         if task_name is None or task_name == 'goal':
             self._teacher_task = GroceryGroundGoalTask(
-                max_steps=200,
+                max_steps=max_steps,
                 success_distance_thresh=0.5,
-                fail_distance_thresh=3.0,
+                fail_distance_thresh=fail_distance_thresh,
                 random_goal=with_language,
                 random_range=10.0)
         elif task_name == 'kickball':
@@ -370,8 +374,10 @@ class GroceryGround(GazeboEnvBase):
         task_group.add_task(self._teacher_task)
         self._teacher.add_task_group(task_group)
         self._seq_length = 20
-        self._sentence_space = DiscreteSequence(self._teacher.vocab_size,
-                                                self._seq_length)
+        # using MultiDiscrete instead of DiscreteSequence so gym
+        # _spec_from_gym_space won't complain.
+        self._sentence_space = gym.spaces.MultiDiscrete(
+            [self._teacher.vocab_size] * self._seq_length)
 
         wf_path = os.path.join(social_bot.get_world_dir(),
                                "grocery_ground.world")
