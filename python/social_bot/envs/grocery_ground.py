@@ -35,6 +35,7 @@ from social_bot import teacher
 from social_bot.envs.gazebo_base import GazeboEnvBase
 from social_bot.teacher import TeacherAction
 from social_bot import teacher_tasks
+from social_bot.teacher_tasks import GoalTask
 import social_bot.pygazebo as gazebo
 
 
