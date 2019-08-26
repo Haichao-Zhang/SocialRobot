@@ -372,10 +372,12 @@ class GroceryGround(GazeboEnvBase):
         task_group.add_task(self._teacher_task)
         self._teacher.add_task_group(task_group)
         self._seq_length = 20
+        self._teacher._build_vocab_from_tasks()
         # using MultiDiscrete instead of DiscreteSequence so gym
         # _spec_from_gym_space won't complain.
-        self._sentence_space = gym.spaces.MultiDiscrete(
-            [self._teacher.vocab_size] * self._seq_length)
+        if self._teacher.vocab_size:
+            self._sentence_space = gym.spaces.MultiDiscrete(
+                [self._teacher.vocab_size] * self._seq_length)
 
         wf_path = os.path.join(social_bot.get_world_dir(),
                                "grocery_ground.world")
