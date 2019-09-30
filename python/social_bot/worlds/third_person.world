@@ -22,9 +22,15 @@
       </include>
     </model>
 
+    <model name="pioneer2dx2">
+      <include>
+        <uri>model://pioneer2dx_noplugin</uri>
+      </include>
+    </model>
+
     <model name="kuka">
       <include>
-        <uri>model://kuka-lwr-4plus</uri>
+        <uri>model://kuka_lwr_4plus</uri>
       </include>
     </model>
 
