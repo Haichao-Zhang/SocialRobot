@@ -60,7 +60,7 @@ class ThirdPersonEnv(GazeboEnvBase):
                  port=None,
                  resized_image_size=None,
                  data_format='channels_last'):
-        """Create SimpleNavigation environment.
+        """Create ThirdPersonEnv environment.
 
         Args:
             with_language (bool): whether to generate language for observation
@@ -88,7 +88,7 @@ class ThirdPersonEnv(GazeboEnvBase):
         print("=========")
         print(self._all_joints)
         self._joint_names = list(
-            filter(lambda s: s.find('camera') == -1, self._all_joints))
+            filter(lambda s: s.find('wheel') == -1, self._all_joints))
         print("=========")
         print(self._joint_names)
         self._teacher = teacher.Teacher(task_groups_exclusive=False)
@@ -178,8 +178,11 @@ class ThirdPersonEnv(GazeboEnvBase):
         #image = self._agent.get_camera_observation(
         #    "default::simple_arm_agent::pioneer2dx_noplugin::camera_link::camera")
 
+        #image = self._agent.get_camera_observation(
+        #    "default::simple_arm_agent::simple_arm_hz::camera_link::camera")
+
         image = self._agent.get_camera_observation(
-            "default::simple_arm_agent::simple_arm_hz::camera_link::camera")
+            "default::pioneer2dx::pioneer2dx_noplugin::camera_link::camera")
 
         image = np.array(image, copy=False)
         if self._resized_image_size:
