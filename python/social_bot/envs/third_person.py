@@ -79,8 +79,8 @@ class ThirdPersonEnv(GazeboEnvBase):
         """
         super(ThirdPersonEnv, self).__init__(world_file='third_person.world',
                                              port=port)
-        #self._agent = self._world.get_agent()
-        self._agent = self._world.get_agent('simple_arm_agent')  # test, goal
+        self._agent = self._world.get_agent()
+        #self._agent = self._world.get_agent('simple_arm_agent')  # test, goal
         self._rendering_cam_pose = "4 -4 3 0 0.4 2.3"
         assert self._agent is not None
         logging.debug("joint names: %s" % self._agent.get_joint_names())
