@@ -31,6 +31,14 @@
     <model name="kuka">
       <include>
         <uri>model://kuka_lwr_4plus</uri>
+        <pose>-1 1 0 0 0 0</pose>
+      </include>
+    </model>
+
+    <model name="kuka_cam">
+      <include>
+        <uri>model://kuka_lwr_4plus_cam</uri>
+        <pose>1 -1 0 0 0 0</pose>
       </include>
     </model>
 
