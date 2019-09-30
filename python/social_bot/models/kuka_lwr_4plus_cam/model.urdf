@@ -113,19 +113,6 @@
       </axis>
       <dynamics damping="0.01" friction="0.1"/>
     </joint>
-    <joint type="revolute" name="left_wheel_hinge">
-      <pose>0 0 -0.03 0 0 0</pose>
-      <child>left_wheel</child>
-      <parent>chassis</parent>
-      <axis>
-        <xyz>0 1 0</xyz>
-        <use_parent_model_frame>true</use_parent_model_frame>
-        <limit>
-          <effort>1</effort>
-          <velocity>100</velocity>
-        </limit>
-      </axis>
-    </joint>
     <gazebo reference="lwr_arm_base_link">
         <!--<material value="kuka-lwr.material"/>-->
     </gazebo>
