@@ -1,5 +1,6 @@
 # Copyright (c) 2019 Horizon Robotics. All Rights Reserved.
 
+from .third_person import ThirdPersonLanguage
 from .simple_navigation import SimpleNavigation
 from .simple_navigation import SimpleNavigationDiscreteAction
 from .simple_navigation import SimpleNavigationLanguage
