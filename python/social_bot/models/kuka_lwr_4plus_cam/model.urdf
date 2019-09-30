@@ -1,4 +1,4 @@
-<robot name="kuka_lwr_4plus" xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller" xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface" xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor" xmlns:xacro="http://www.ros.org/wiki/xacro">
+<robot name="kuka_lwr_4plus_cam" xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller" xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface" xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor" xmlns:xacro="http://www.ros.org/wiki/xacro">
     <material name="DarkGrey">
         <color rgba="0.3 0.3 0.3 1.0" />
     </material>
@@ -32,10 +32,41 @@
         <parent link="world" />
         <child link="lwr_arm_base_link" />
     </joint>
-    <joint name="camera_joint" type="fixed">
-      <origin rpy="0 0 0" xyz="0 0 2" />
-      <parent link="world" />
-      <child link="camera_link" />
+    <link name="camera_link">
+        <pose>0.25 0 0.25 0 0 0</pose>
+        <visual name="visual">
+            <geometry>
+                <box>
+                    <size>0.02 0.02 0.02</size>
+                </box>
+            </geometry>
+        </visual>
+        <sensor name="camera" type="camera">
+            <camera>
+                <horizontal_fov>2.0944</horizontal_fov>
+                <image>
+                    <width>128</width>
+                    <height>128</height>
+                </image>
+                <clip>
+                    <near>0.1</near>
+                    <far>100</far>
+                </clip>
+            </camera>
+            <always_on>1</always_on>
+            <update_rate>20</update_rate>
+            <visualize>true</visualize>
+        </sensor>
+    </link>
+    <joint type="fixed" name="camera_joint">
+        <pose>0 0 0 0 0 0</pose>
+        <child>camera_link</child>
+        <parent>lwr_arm_base_link</parent>
+        <axis>
+            <xyz>0 0 1</xyz>
+            <use_parent_model_frame>true</use_parent_model_frame>
+        </axis>
+        <dynamics damping="0.01" friction="0.1"/>
     </joint>
     <!--link name="world_link">
     <inertial>
@@ -379,35 +410,6 @@
         </collision>
     </link>
     <gazebo reference="lwr_arm_7_link">
-        <!--<material value="kuka-lwr.material"/>-->
-    </gazebo>
-    <link name="camera_link">
-        <pose>0.25 0 0.25 0 0 0</pose>
-        <visual name="visual">
-        <geometry>
-            <box>
-            <size>0.02 0.02 0.02</size>
-            </box>
-        </geometry>
-        </visual>
-        <sensor name="camera" type="camera">
-        <camera>
-            <horizontal_fov>2.0944</horizontal_fov>
-            <image>
-            <width>128</width>
-            <height>128</height>
-            </image>
-            <clip>
-            <near>0.1</near>
-            <far>100</far>
-            </clip>
-        </camera>
-        <always_on>1</always_on>
-        <update_rate>20</update_rate>
-        <visualize>true</visualize>
-        </sensor>
-    </link>
-    <gazebo reference="camera_link">
         <!--<material value="kuka-lwr.material"/>-->
     </gazebo>
     <!--joint name="lwr_arm_hand_fixed_joint" type="fixed">

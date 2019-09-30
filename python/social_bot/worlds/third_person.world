@@ -15,30 +15,10 @@
       <uri>model://sun</uri>
     </include>
 
-    <!-- Pioneer2dx model -->
-    <model name="pioneer2dx">
-      <include>
-        <uri>model://pioneer2dx_noplugin</uri>
-      </include>
-    </model>
-
-    <model name="pioneer2dx2">
-      <include>
-        <uri>model://pioneer2dx_noplugin</uri>
-      </include>
-    </model>
-
-    <model name="kuka">
-      <include>
-        <uri>model://kuka_lwr_4plus</uri>
-        <pose>-1 1 0 0 0 0</pose>
-      </include>
-    </model>
-
-    <model name="kuka_cam">
+    <model name="haha">
       <include>
         <uri>model://kuka_lwr_4plus_cam</uri>
-        <pose>1 -1 0 0 0 0</pose>
+        <pose>1 1 0 0 0 0</pose>
       </include>
     </model>
 
