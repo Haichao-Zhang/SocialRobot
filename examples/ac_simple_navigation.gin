@@ -7,7 +7,7 @@ import alf.trainers.on_policy_trainer
 # environment config
 import alf.environments.wrappers
 # CHANNEL_ORDER should be set to channels_first if you are using GPU
-CHANNEL_ORDER='channels_last'
+CHANNEL_ORDER='channels_first'
 FrameStack.channel_order=%CHANNEL_ORDER
 create_environment.env_name='SocialBot-SimpleNavigationDiscreteAction-v0'
 create_environment.env_load_fn=@suite_socialbot.load
