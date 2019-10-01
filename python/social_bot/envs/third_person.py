@@ -232,7 +232,7 @@ def main():
     env = ThirdPersonEnv()
     for _ in range(10000000):
         obs = env.reset()
-        control = [random.random() * 0.2, random.random() * 0.2]
+        control = [random.random() * 0.2] * len(env._all_joints)
         plt.imshow(obs['image'])
         logging.info("Close the figure to continue")
         plt.show()
