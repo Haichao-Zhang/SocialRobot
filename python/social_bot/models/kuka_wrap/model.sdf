@@ -5,7 +5,7 @@
         <uri>model://kuka_lwr_4plus_cam</uri>
       </include>
       <link name="camera_link">
-        <pose>0.25 0 0.25 0 0 0</pose>
+        <pose>-0.1 0 0.5 0 0 2.355</pose>
         <visual name="visual">
           <geometry>
             <box>

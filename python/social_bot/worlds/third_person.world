@@ -18,14 +18,14 @@
     <model name="kuka_cam">
       <include>
         <uri>model://kuka_wrap</uri>
-        <pose>1 1 0 0 0 0</pose>
+        <pose>1 -1 0 0 0 0</pose>
       </include>
     </model>
 
     <model name="kuka_cam2">
       <include>
         <uri>model://kuka_lwr_4plus_cam</uri>
-        <pose>-1 -1 0 0 0 0</pose>
+        <pose>-1 1 0 0 0 0</pose>
       </include>
     </model>
 
