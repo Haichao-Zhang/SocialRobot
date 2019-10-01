@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <model name="kuka_cam">
+      <include>
+        <uri>model://kuka_lwr_4plus_cam</uri>
+      </include>
+  </model>
+</sdf>

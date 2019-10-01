@@ -2,7 +2,7 @@
 <sdf version="1.5">
   <model name="kuka_wrap">
       <include>
-        <uri>model://kuka_lwr_4plus_cam</uri>
+        <uri>model://kuka</uri>
       </include>
       <link name="camera_link">
         <pose>-0.1 0 0.5 0 0 2.355</pose>
