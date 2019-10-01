@@ -422,7 +422,7 @@
                 </clip>
             </camera>
 
-        <plugin name="camera_camera_controller" filename="libgazebo_ros_camera.so">
+        <plugin name="camera_camera_controller" filename="libCameraPlugin.so">
             <alwaysOn>true</alwaysOn>
             <updateRate>20.0</updateRate>
             <cameraName>arm_sensor/camera</cameraName>
