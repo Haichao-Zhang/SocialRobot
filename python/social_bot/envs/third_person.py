@@ -89,7 +89,7 @@ class ThirdPersonEnv(GazeboEnvBase):
         print("=========")
         print(self._all_joints)
         self._joint_names = list(
-            filter(lambda s: s.find('wheel') == -1, self._all_joints))
+            filter(lambda s: s.find('world') == -1 and s.find('camera') == -1, self._all_joints))
         print("=========")
         print(self._joint_names)
         self._teacher = teacher.Teacher(task_groups_exclusive=False)
@@ -176,20 +176,9 @@ class ThirdPersonEnv(GazeboEnvBase):
         return obs
 
     def _get_camera_observation(self):
-        #image = self._agent.get_camera_observation(
-        #    "default::simple_arm_agent::pioneer2dx_noplugin::camera_link::camera")
-
-        #image = self._agent.get_camera_observation(
-        #    "default::simple_arm_agent::simple_arm_hz::camera_link::camera")
-
-        #image = self._agent.get_camera_observation(
-        #    "default::kuka_cam::kuka_lwr_4plus_cam::camera_link::camera")
 
         image = self._agent.get_camera_observation(
             "default::kuka_cam::kuka_wrap::camera_link::camera")
-
-        # image = self._agent.get_camera_observation(
-        #     "default::pioneer2dx::pioneer2dx_noplugin::camera_link::camera")
 
         image = np.array(image, copy=False)
         if self._resized_image_size:
