@@ -377,14 +377,17 @@
         <!--<material value="kuka-lwr.material"/>-->
     </gazebo>
 
-    <joint name="lwr_arm_7_joint" type="revolute">
+    <joint name="camera_joint" type="fixed">
+        <pose>0 0 0 0 0 0</pose>
         <origin rpy="0 0 0" xyz="0 0 0.078" />
         <axis xyz="0 0 1" />
-        <limit effort="204" lower="-2.96705972839" upper="2.96705972839" velocity="3.14159265359" />
-        <safety_controller k_position="100" k_velocity="2" soft_lower_limit="-2.93215314335" soft_upper_limit="2.93215314335" />
-        <dynamics damping="1.0" />
-        <parent link="lwr_arm_7_link" />
+        <parent link="world" />
         <child link="camera_link" />
+        <axis>
+            <xyz>0 0 1</xyz>
+            <use_parent_model_frame>true</use_parent_model_frame>
+        </axis>
+        <dynamics damping="0.01" friction="0.1"/>
     </joint>
     <link name="camera_link">
         <inertial>
@@ -393,7 +396,6 @@
             <inertia ixx="6.66666666667e-05" ixy="0" ixz="0" iyy="6.66666666667e-05" iyz="0" izz="0.00012" />
         </inertial>
         <visual>
-            <origin rpy="0 0 0" xyz="0 0 0" />
             <geometry>
                 <box>
                     <size>500 500 500</size>
@@ -417,7 +419,6 @@
             <update_rate>20</update_rate>
             <visualize>true</visualize>
         </sensor>
-
     </link>
 
     <!--joint name="lwr_arm_hand_fixed_joint" type="fixed">
