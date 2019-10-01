@@ -386,10 +386,6 @@
         <parent link="lwr_arm_7_link" />
         <child link="lwr_arm_8_link" />
     </joint>
-    <gazebo reference="lwr_arm_6_joint">
-        <provideFeedback>1</provideFeedback>
-        <implicitSpringDamper>1</implicitSpringDamper>
-    </gazebo>
     <link name="lwr_arm_8_link">
         <inertial>
             <mass value="0.2" />
@@ -399,29 +395,14 @@
         <visual>
             <origin rpy="0 0 0" xyz="0 0 0" />
             <geometry>
-                <mesh filename="model://kuka_lwr_4plus/meshes/arm_flanche.dae" scale="200 100 100" />
+                <box>
+                    <size>500 500 500</size>
+                </box>
             </geometry>
-            <material name="Grey" />
+            <material name="Red" />
         </visual>
-        <collision>
-            <origin rpy="0 0 0" xyz="0 0 0" />
-            <geometry>
-                <!--mesh filename="model://kuka-lwr-4plus/meshes/convex/arm_flanche_convex.stl" scale="1.0 1.0 1.0"/-->
-                <mesh filename="model://kuka_lwr_4plus/meshes/arm_flanche.dae" scale="100 100 100" />
-            </geometry>
-            <surface>
-                <friction>
-                    <ode>
-                        <mu>0.0</mu>
-                        <mu2>0.0</mu2>
-                    </ode>
-                </friction>
-            </surface>
-        </collision>
     </link>
-    <gazebo reference="lwr_arm_8_link">
-        <!--<material value="kuka-lwr.material"/>-->
-    </gazebo>
+
     <!--joint name="lwr_arm_hand_fixed_joint" type="fixed">
     <parent link="lwr_arm_7_link"/>
     <child link="lwr_tool_mount"/>
