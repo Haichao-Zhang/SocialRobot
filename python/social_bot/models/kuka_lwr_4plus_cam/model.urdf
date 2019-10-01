@@ -403,10 +403,16 @@
             </geometry>
             <material name="Red" />
         </visual>
-        <sensor name="camera" type="camera">
+    </link>
+
+    <gazebo reference="camera_link">
+        <sensor type="camera" name="camera">
+            <update_rate>30.0</update_rate>
             <camera>
+                <pose>0.035 0 0.078 0 0 0</pose>
                 <horizontal_fov>2.0944</horizontal_fov>
                 <image>
+                    <format>R8G8B8</format>
                     <width>128</width>
                     <height>128</height>
                 </image>
@@ -415,11 +421,23 @@
                     <far>100</far>
                 </clip>
             </camera>
-            <always_on>1</always_on>
-            <update_rate>20</update_rate>
-            <visualize>true</visualize>
-        </sensor>
-    </link>
+
+        <plugin name="camera_camera_controller" filename="libgazebo_ros_camera.so">
+            <alwaysOn>true</alwaysOn>
+            <updateRate>20.0</updateRate>
+            <cameraName>arm_sensor/camera</cameraName>
+            <imageTopicName>image_raw</imageTopicName>
+            <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+            <frameName>camera_link</frameName>
+            <hackBaseline>0.07</hackBaseline>
+            <distortionK1>0.0</distortionK1>
+            <distortionK2>0.0</distortionK2>
+            <distortionK3>0.0</distortionK3>
+            <distortionT1>0.0</distortionT1>
+            <distortionT2>0.0</distortionT2>
+        </plugin>
+      </sensor>
+    </gazebo>
 
     <!--joint name="lwr_arm_hand_fixed_joint" type="fixed">
     <parent link="lwr_arm_7_link"/>
