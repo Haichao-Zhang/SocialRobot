@@ -24,6 +24,7 @@ import gym
 import gym.spaces
 import gin
 import PIL.Image
+from PIL import Image
 
 import social_bot
 from social_bot import teacher
@@ -192,6 +193,10 @@ class ThirdPersonEnv(GazeboEnvBase):
             image = PIL.Image.fromarray(image).resize(self._resized_image_size,
                                                       PIL.Image.ANTIALIAS)
             image = np.array(image, copy=False)
+
+        im = Image.fromarray(image)
+        im.save("frame.jpeg")
+
         if self._data_format == "channels_first":
             image = np.transpose(image, [2, 0, 1])
         return image
