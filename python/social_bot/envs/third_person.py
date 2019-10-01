@@ -80,8 +80,8 @@ class ThirdPersonEnv(GazeboEnvBase):
         """
         super(ThirdPersonEnv, self).__init__(world_file='third_person.world',
                                              port=port)
-        self._agent = self._world.get_agent()
-        #self._agent = self._world.get_agent('kuka_cam')  # test, goal
+        #self._agent = self._world.get_agent()
+        self._agent = self._world.get_agent('kuka_cam')  # test, goal
         self._rendering_cam_pose = "4 -4 3 0 0.4 2.3"
         assert self._agent is not None
         logging.debug("joint names: %s" % self._agent.get_joint_names())
@@ -182,8 +182,11 @@ class ThirdPersonEnv(GazeboEnvBase):
         #image = self._agent.get_camera_observation(
         #    "default::simple_arm_agent::simple_arm_hz::camera_link::camera")
 
+        #image = self._agent.get_camera_observation(
+        #    "default::kuka_cam::kuka_lwr_4plus_cam::camera_link::camera")
+
         image = self._agent.get_camera_observation(
-            "default::kuka_cam::kuka_lwr_4plus_cam::camera_link::camera")
+            "default::kuka_cam::kuka_wrap::camera_link::camera")
 
         # image = self._agent.get_camera_observation(
         #     "default::pioneer2dx::pioneer2dx_noplugin::camera_link::camera")
