@@ -5,7 +5,7 @@
         <uri>model://kuka</uri>
       </include>
       <link name="camera_link">
-        <pose>-0.1 0 0.5 0 0 2.355</pose>
+        <pose>-1 1 0.5 0 0 2.355</pose>
         <visual name="visual">
           <geometry>
             <box>
