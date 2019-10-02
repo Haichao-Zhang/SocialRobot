@@ -25,7 +25,7 @@ def main():
                 dict(control=control, sentence="hello"))
             steps += 1
             if done:
-                logging.info("reward: " + str(reward))
+                logging.info("done reward: " + str(reward))
                 break
         logging.info("steps=%s" % steps + " frame_rate=%s" %
                      (steps / (time.time() - t0)) + " mem=%dM" %

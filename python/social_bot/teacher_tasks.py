@@ -91,7 +91,7 @@ class GoalTask(teacher.Task):
                                   str(goal_loc) + "dist: " + str(dist))
                     agent_sentence = yield TeacherAction(reward=1.0,
                                                          sentence="well done",
-                                                         done=False)
+                                                         done=True)
                     steps_since_last_reward = 0
                     #self._move_goal(goal, loc)
                     self._move_goal_relative(goal, (1, -1, 0), loc)
@@ -215,7 +215,7 @@ class IsoGoalTask(teacher.Task):
                               "dist: " + str(dist))
                 agent_sentence = yield TeacherAction(reward=1.0,
                                                      sentence="well done",
-                                                     done=False)
+                                                     done=True)
                 steps_since_last_reward = 0
                 agent.reset()  ## should reset to its initial loc #====>
                 loc = get_agent_loc()
