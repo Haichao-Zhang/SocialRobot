@@ -61,7 +61,7 @@ class ThirdPersonEnv(GazeboEnvBase):
                  image_with_internal_states=False,
                  port=None,
                  resized_image_size=None,
-                 data_format='channels_last'):
+                 data_format='channels_first'):
         """Create ThirdPersonEnv environment.
 
         Args:
@@ -169,7 +169,8 @@ class ThirdPersonEnv(GazeboEnvBase):
             controls = action['control']
         else:
             sentence = ''
-            controls = action['control']
+            #controls = action['control']
+            controls = action
         controls = dict(zip(self._joint_names, controls))
         teacher_action = self._teacher.teach(sentence)  # return goal location
         self._agent.take_action(controls)
@@ -211,12 +212,14 @@ class ThirdPersonEnv(GazeboEnvBase):
             obs = OrderedDict()
             obs['image'] = img
             if self._image_with_internal_states:
-                obs['states'] = self._get_internal_states(
-                    self._agent, self._joint_names)
+                states = self._get_internal_states(self._agent,
+                                                   self._joint_names)
                 # append goal location to states
-                obs['states'] = np.concatenate(
-                    (obs['states'], self._get_state_from_str(sentence_raw)),
-                    axis=0)
+                states = np.concatenate(
+                    (states, self._get_state_from_str(sentence_raw)), axis=0)
+
+                obs['image'] = states
+
             if self._with_language:
                 # obs['sentence'] = self._teacher.sentence_to_sequence(
                 #     sentence_raw, self._seq_length)
