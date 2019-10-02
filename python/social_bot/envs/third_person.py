@@ -94,7 +94,7 @@ class ThirdPersonEnv(GazeboEnvBase):
         print(self._joint_names)
         self._teacher = teacher.Teacher(task_groups_exclusive=False)
         task_group = teacher.TaskGroup()
-        task_group.add_task(GoalTask())
+        task_group.add_task(GoalTask(goal_name="goal"))
         self._teacher.add_task_group(task_group)
         self._seq_length = 20
         self._sentence_space = DiscreteSequence(self._teacher.vocab_size,
@@ -110,7 +110,7 @@ class ThirdPersonEnv(GazeboEnvBase):
         self.reset()
 
         # Get observation dimension
-        obs_sample = self._get_observation('hello')
+        obs_sample = self._get_observation('hello') # 'hello' will be the sentence
         if self._with_language or self._image_with_internal_states:
             self._observation_space = self._construct_dict_space(
                 obs_sample, self._teacher.vocab_size)
@@ -155,9 +155,11 @@ class ThirdPersonEnv(GazeboEnvBase):
         """
         if self._with_language:
             sentence = action.get('sentence', None)
+            print(sentence)
             if type(sentence) != str:
                 sentence = self._teacher.sequence_to_sentence(sentence)
             controls = action['control']
+            print(controls)
         else:
             sentence = ''
             controls = action
@@ -213,6 +215,7 @@ class ThirdPersonEnv(GazeboEnvBase):
 class ThirdPersonLanguage(ThirdPersonEnv):
     def __init__(self, port=None):
         super(ThirdPersonLanguage, self).__init__(with_language=True,
+                                                  image_with_internal_states=True,
                                                   port=port)
 
 

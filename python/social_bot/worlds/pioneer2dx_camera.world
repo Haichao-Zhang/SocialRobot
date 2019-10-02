@@ -19,6 +19,7 @@
     <model name="pioneer2dx">
       <include>
         <uri>model://pioneer2dx_noplugin</uri>
+        <pose>-1 -1 0 0 0 0</pose>
       </include>
     </model>
 
@@ -43,7 +44,7 @@
         </visual>
       </link>
     </model>
-    
+
     <model name="south_wall">
       <static>1</static>
       <pose>1.5 0 0.1 0 0 0</pose>

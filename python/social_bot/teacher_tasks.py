@@ -41,7 +41,7 @@ class GoalTask(teacher.Task):
                  goal_name="goal",
                  success_distance_thresh=0.5,
                  fail_distance_thresh=0.5,
-                 random_range=2.0):
+                 random_range=1.0):
         """
         Args:
             max_steps (int): episode will end if not reaching gaol in so many steps
@@ -67,16 +67,23 @@ class GoalTask(teacher.Task):
             world (pygazebo.World): the simulation world
         """
         agent_sentence = yield
-        agent.reset()
+        # agent.reset() ## should reset to its initial loc #====>
         goal = world.get_agent(self._goal_name)
-        loc, dir = agent.get_pose()
+        loc, dir = agent.get_pose() ## BUG: initial pose is always zero
+        print("agent pose ======")
+        print(loc)
         loc = np.array(loc)
-        self._move_goal(goal, loc)
+        #self._move_goal(goal, loc)
+        self._move_goal_relative(goal, (1, -1, 0), loc)
         steps_since_last_reward = 0
         while steps_since_last_reward < self._max_steps:
             steps_since_last_reward += 1
             loc, dir = agent.get_pose()
             goal_loc, _ = goal.get_pose()
+            print("agent pose ======")
+            print(loc)
+            print("goal loc ======")
+            print(goal_loc)
             loc = np.array(loc)
             goal_loc = np.array(goal_loc)
             dist = np.linalg.norm(loc - goal_loc)
@@ -92,7 +99,8 @@ class GoalTask(teacher.Task):
                     agent_sentence = yield TeacherAction(
                         reward=1.0, sentence="well done", done=False)
                     steps_since_last_reward = 0
-                    self._move_goal(goal, loc)
+                    #self._move_goal(goal, loc)
+                    self._move_goal_relative(goal, (1, -1, 0), loc)
                 else:
                     agent_sentence = yield TeacherAction()
             elif dist > self._initial_dist + self._fail_distance_thresh:
@@ -110,6 +118,20 @@ class GoalTask(teacher.Task):
         while True:
             loc = (random.random() * range - range / 2,
                    random.random() * range - range / 2, 0)
+            self._initial_dist = np.linalg.norm(loc - agent_loc)
+            if self._initial_dist > self._success_distance_thresh:
+                break
+        goal.reset()
+        goal.set_pose((loc, (0, 0, 0)))
+
+    def _move_goal_relative(self, goal, origin, agent_loc):
+        """
+        Move goal with respect to a specified position
+        """
+        range = self._random_range
+        while True:
+            loc = (random.random() * range - range / 2 + origin[0],
+                   random.random() * range - range / 2 + origin[1], random.random() * range + origin[2])
             self._initial_dist = np.linalg.norm(loc - agent_loc)
             if self._initial_dist > self._success_distance_thresh:
                 break

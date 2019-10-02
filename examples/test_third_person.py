@@ -19,8 +19,8 @@ def main():
         obs = env.reset()
         print(env.action_space)
         #control = [random.random() * 0.2, random.random() * 0.2]
-        control = [random.random() * 0.8 for i in range(6)]
         while True:
+            control = [random.random() * 10000 for i in range(7)]
             obs, reward, done, info = env.step(
                 dict(control=control, sentence="hello"))
             steps += 1
