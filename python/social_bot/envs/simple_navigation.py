@@ -101,7 +101,7 @@ class SimpleNavigation(GazeboEnvBase):
         self._data_format = data_format
 
         time.sleep(0.1)  # Allow Gazebo threads to be fully ready
-        self.reset()
+        #self.reset()
 
         # Get observation dimension
         obs_sample = self._get_observation('hello')
