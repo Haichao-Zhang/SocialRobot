@@ -56,6 +56,7 @@ class ThirdPersonEnv(GazeboEnvBase):
     NUM_SIMULATION_STEPS = 20
 
     def __init__(self,
+                 with_goal=False,
                  with_language=False,
                  image_with_internal_states=False,
                  port=None,
@@ -103,10 +104,11 @@ class ThirdPersonEnv(GazeboEnvBase):
                         random_range=1))
         self._teacher.add_task_group(task_group)
         self._seq_length = 20
-        self._sentence_space = DiscreteSequence(self._teacher.vocab_size,
-                                                self._seq_length)
+        # self._sentence_space = DiscreteSequence(self._teacher.vocab_size,
+        #                                         self._seq_length)
 
         self._with_language = with_language
+        self._with_goal = with_goal
         self._image_with_internal_states = image_with_internal_states
         self._resized_image_size = resized_image_size
         assert data_format in ('channels_first', 'channels_last')
@@ -167,11 +169,10 @@ class ThirdPersonEnv(GazeboEnvBase):
             controls = action['control']
         else:
             sentence = ''
-            controls = action
+            controls = action['control']
         controls = dict(zip(self._joint_names, controls))
-        teacher_action = self._teacher.teach(sentence)
+        teacher_action = self._teacher.teach(sentence)  # return goal location
         self._agent.take_action(controls)
-
         self._world.step(self.NUM_SIMULATION_STEPS)
         obs = self._get_observation(teacher_action.sentence)
         return (obs, teacher_action.reward, teacher_action.done, {})
@@ -200,6 +201,9 @@ class ThirdPersonEnv(GazeboEnvBase):
             image = np.transpose(image, [2, 0, 1])
         return image
 
+    def _get_state_from_str(self, sentence_raw):
+        return np.fromstring(sentence_raw[1:-1], dtype=float, sep=' ')
+
     def _get_observation(self, sentence_raw):
         img = self._get_camera_observation()
         if self._image_with_internal_states or self._with_language:
@@ -209,10 +213,15 @@ class ThirdPersonEnv(GazeboEnvBase):
             if self._image_with_internal_states:
                 obs['states'] = self._get_internal_states(
                     self._agent, self._joint_names)
+                # append goal location to states
+                obs['states'] = np.concatenate(
+                    (obs['states'], self._get_state_from_str(sentence_raw)),
+                    axis=0)
+                #print(obs['states'])
             if self._with_language:
-                obs['sentence'] = self._teacher.sentence_to_sequence(
-                    sentence_raw, self._seq_length)
-                    print(obs['sentence'])
+                # obs['sentence'] = self._teacher.sentence_to_sequence(
+                #     sentence_raw, self._seq_length)
+                obs['sentence'] = sentence_raw
         else:  # observation is pure image
             obs = img
         return obs
@@ -221,7 +230,8 @@ class ThirdPersonEnv(GazeboEnvBase):
 class ThirdPersonLanguage(ThirdPersonEnv):
     def __init__(self, port=None):
         super(ThirdPersonLanguage,
-              self).__init__(with_language=True,
+              self).__init__(with_goal=True,
+                             with_language=False,
                              image_with_internal_states=True,
                              port=port)
 

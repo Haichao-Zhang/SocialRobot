@@ -17,14 +17,15 @@ def main():
     logging.info(" mem=%dM" % (proc.memory_info().rss // 1e6))
     for _ in range(10000000):
         obs = env.reset()
+        action_space = env.action_space
         while True:
-            control = [(random.random() - 0.5) * 100 for i in range(7)]
+            control = [(random.random() - 0.5) * 100
+                       for i in range(action_space.shape[0])]
             obs, reward, done, info = env.step(
                 dict(control=control, sentence="hello"))
             steps += 1
             if done:
-                logging.info("reward: " + str(reward) + "sent: " +
-                             str(obs["sentence"]))
+                logging.info("reward: " + str(reward))
                 break
         logging.info("steps=%s" % steps + " frame_rate=%s" %
                      (steps / (time.time() - t0)) + " mem=%dM" %

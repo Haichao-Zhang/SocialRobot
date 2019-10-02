@@ -172,6 +172,8 @@ class GazeboEnvBase(gym.Env):
         if 'sentence' in obs_sample.keys():
             # using MultiDiscrete instead of DiscreteSequence so gym
             # _spec_from_gym_space won't complain.
+            print(obs_sample['sentence'])
+            print(vocab_size)
             sentence_space = gym.spaces.MultiDiscrete(
                 [vocab_size] * len(obs_sample['sentence']))
             ob_space_dict['sentence'] = sentence_space
