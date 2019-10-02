@@ -80,12 +80,9 @@ class ThirdPersonEnv(GazeboEnvBase):
         """
         super(ThirdPersonEnv, self).__init__(world_file='third_person.world',
                                              port=port)
-        #self._agent = self._world.get_agent()
-        #================== debug
-
         self._agent = self._world.get_agent('kuka_cam')  # test, goal
 
-        #self._rendering_cam_pose = "4 -4 3 0 0.4 2.3"
+        self._rendering_cam_pose = "4 -4 3 0 0.4 2.3"
         self._camera_link_name = "default::kuka_cam::kuka_wrap::camera_link::camera"
         self._end_link_name = "kuka_cam::kuka_wrap::kuka_lwr_4plus::lwr_arm_7_link"
         assert self._agent is not None
@@ -101,7 +98,7 @@ class ThirdPersonEnv(GazeboEnvBase):
         task_group.add_task(
             IsoGoalTask(end_link_name=self._end_link_name,
                         goal_name="goal",
-                        max_steps=5000,
+                        max_steps=500,
                         success_distance_thresh=0.5,
                         random_range=1))
         self._teacher.add_task_group(task_group)
@@ -116,7 +113,7 @@ class ThirdPersonEnv(GazeboEnvBase):
         self._data_format = data_format
 
         time.sleep(0.1)  # Allow Gazebo threads to be fully ready
-        #self.reset()
+        self.reset()
 
         # Get observation dimension
         obs_sample = self._get_observation(
@@ -165,29 +162,15 @@ class ThirdPersonEnv(GazeboEnvBase):
         """
         if self._with_language:
             sentence = action.get('sentence', None)
-            print(sentence)
             if type(sentence) != str:
                 sentence = self._teacher.sequence_to_sentence(sentence)
             controls = action['control']
-            print(controls)
         else:
             sentence = ''
             controls = action
         controls = dict(zip(self._joint_names, controls))
         teacher_action = self._teacher.teach(sentence)
         self._agent.take_action(controls)
-        #t_model = self._world.get_model('kuka_cam')  # test, goal
-        #loc, dir = t_model.get_pose()  ## BUG: initial pose is always zero
-
-        # t_model = self._world.get_model('kuka_no_cam')  # test, goal
-        # loc, dir = t_model.get_pose()  ## BUG: initial pose is always zero
-        # print("kuka_no_cam pose ============+++++")
-        # print(loc)
-
-        # t_model = self._world.get_model('goal')  # test, goal
-        # loc, dir = t_model.get_pose()  ## BUG: initial pose is always zero
-        # print("ball pose ============+++++")
-        # print(loc)
 
         self._world.step(self.NUM_SIMULATION_STEPS)
         obs = self._get_observation(teacher_action.sentence)
@@ -251,7 +234,6 @@ def main():
     for _ in range(10000000):
         obs = env.reset()
         control = [random.random() * 0.2] * len(env._all_joints)
-        print(control)
         plt.imshow(obs['image'])
         logging.info("Close the figure to continue")
         plt.show()
