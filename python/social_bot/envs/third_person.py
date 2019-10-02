@@ -99,7 +99,11 @@ class ThirdPersonEnv(GazeboEnvBase):
         self._teacher = teacher.Teacher(task_groups_exclusive=False)
         task_group = teacher.TaskGroup()
         task_group.add_task(
-            IsoGoalTask(end_link_name=self._end_link_name, goal_name="goal"))
+            IsoGoalTask(end_link_name=self._end_link_name,
+                        goal_name="goal",
+                        max_steps=5000,
+                        success_distance_thresh=0.5,
+                        random_range=1))
         self._teacher.add_task_group(task_group)
         self._seq_length = 20
         self._sentence_space = DiscreteSequence(self._teacher.vocab_size,

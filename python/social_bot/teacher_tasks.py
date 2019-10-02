@@ -174,7 +174,7 @@ class IsoGoalTask(teacher.Task):
                  end_link_name,
                  goal_name="goal",
                  max_steps=500,
-                 success_distance_thresh=0.5,
+                 success_distance_thresh=0.2,
                  random_range=1.0):
         """
         Args:
@@ -204,17 +204,17 @@ class IsoGoalTask(teacher.Task):
             return loc
 
         agent_sentence = yield
-        # agent.reset() ## should reset to its initial loc #====>
+        agent.reset()  ## should reset to its initial loc #====>
         goal = world.get_agent(self._goal_name)
         loc = get_agent_loc()
-        print("agent pose ======")
-        print(loc)
+        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         loc = np.array(loc)
         #self._move_goal(goal, loc)
         self._move_goal_relative(goal, loc, loc)
         steps_since_last_reward = 0
         while steps_since_last_reward < self._max_steps:
             steps_since_last_reward += 1
+            print(steps_since_last_reward)
             loc = get_agent_loc()
             goal_loc, _ = goal.get_pose()
             print("agent loc ======")
@@ -235,17 +235,20 @@ class IsoGoalTask(teacher.Task):
                                                      done=False)
                 steps_since_last_reward = 0
                 #self._move_goal(goal, loc)
-                import pdb
-                pdb.set_trace()
-                print(
-                    "!!!!!!!!!!!!!! SUCC!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! "
-                )
-                self._move_goal_relative(goal, (1, -1, 0), loc)
+                agent.reset()  ## should reset to its initial loc #====>
+                loc = get_agent_loc()
+                loc = np.array(loc)
+                self._move_goal_relative(goal, loc, loc)
 
-            elif dist >= self._success_distance_thresh:
-                logging.debug("loc: " + str(loc) + " goal: " + str(goal_loc) +
-                              "dist: " + str(dist))
-                yield TeacherAction(reward=-1.0, sentence="failed", done=True)
+            # elif dist >= self._success_distance_thresh:
+            #     logging.debug("loc: " + str(loc) + " goal: " + str(goal_loc) +
+            #                   "dist: " + str(dist))
+            #     print("----here")
+            #     yield TeacherAction(reward=-1.0, sentence="failed", done=True)
+            else:
+                agent_sentence = yield TeacherAction(reward=0.0,
+                                                     sentence="",
+                                                     done=False)
 
         logging.debug("loc: " + str(loc) + " goal: " + str(goal_loc) +
                       "dist: " + str(dist))
@@ -270,8 +273,11 @@ class IsoGoalTask(teacher.Task):
         range = self._random_range
         while True:
             loc = (random.random() * range - range / 2 + origin[0],
-                   random.random() * range - range / 2 + origin[1],
-                   random.random() * range + origin[2])
+                   random.random() * range - range / 2 + origin[1], 0)
+
+            # loc = (random.random() * range - range / 2 + origin[0],
+            #        random.random() * range - range / 2 + origin[1],
+            #        random.random() * range + origin[2])
             self._initial_dist = np.linalg.norm(loc - agent_loc)
             if self._initial_dist > self._success_distance_thresh:
                 break
