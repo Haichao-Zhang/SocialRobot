@@ -18,7 +18,7 @@ def main():
     for _ in range(10000000):
         obs = env.reset()
         while True:
-            control = [random.random() * 10000 for i in range(7)]
+            control = [(random.random() - 0.5) * 100 for i in range(7)]
             obs, reward, done, info = env.step(
                 dict(control=control, sentence="hello"))
             steps += 1
