@@ -212,6 +212,7 @@ class ThirdPersonEnv(GazeboEnvBase):
             if self._with_language:
                 obs['sentence'] = self._teacher.sentence_to_sequence(
                     sentence_raw, self._seq_length)
+                    print(obs['sentence'])
         else:  # observation is pure image
             obs = img
         return obs

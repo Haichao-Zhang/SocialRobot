@@ -222,8 +222,10 @@ class IsoGoalTask(teacher.Task):
                 loc = np.array(loc)
                 self._move_goal_relative(goal, loc, loc)
             else:
+                goal_loc, _ = goal.get_pose()
+                goal_loc_str = str(np.array(goal_loc))
                 agent_sentence = yield TeacherAction(reward=0.0,
-                                                     sentence="",
+                                                     sentence=goal_loc_str,
                                                      done=False)
 
         logging.debug("loc: " + str(loc) + " goal: " + str(goal_loc) +
