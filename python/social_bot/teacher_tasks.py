@@ -171,18 +171,21 @@ class IsoGoalTask(teacher.Task):
     it will get reward -1.
     """
     def __init__(self,
-                 max_steps=500,
+                 end_link_name,
                  goal_name="goal",
+                 max_steps=500,
                  success_distance_thresh=0.5,
                  random_range=1.0):
         """
         Args:
+            end_link_name(string): the name of the link from the agent that will be used for determining succuess or failure
             max_steps (int): episode will end if not reaching gaol in so many steps
             goal_name (string): name of the goal in the world
             success_distance_thresh (float): the goal is reached if it's within this distance to the agent
             random_range (float): the goal's random position range
         """
         super().__init__()
+        self._end_link_name = end_link_name
         self._goal_name = goal_name
         self._success_distance_thresh = success_distance_thresh
         self._max_steps = max_steps
@@ -196,21 +199,25 @@ class IsoGoalTask(teacher.Task):
             agent (pygazebo.Agent): the learning agent
             world (pygazebo.World): the simulation world
         """
+        def get_agent_loc():
+            loc, dir = agent.get_link_pose(self._end_link_name)
+            return loc
+
         agent_sentence = yield
         # agent.reset() ## should reset to its initial loc #====>
         goal = world.get_agent(self._goal_name)
-        loc, dir = agent.get_pose()  ## BUG: initial pose is always zero
+        loc = get_agent_loc()
         print("agent pose ======")
         print(loc)
         loc = np.array(loc)
         #self._move_goal(goal, loc)
-        self._move_goal_relative(goal, (1, -1, 0), loc)
+        self._move_goal_relative(goal, loc, loc)
         steps_since_last_reward = 0
         while steps_since_last_reward < self._max_steps:
             steps_since_last_reward += 1
-            loc, dir = agent.get_pose()
+            loc = get_agent_loc()
             goal_loc, _ = goal.get_pose()
-            print("agent pose ======")
+            print("agent loc ======")
             print(loc)
             print("goal loc ======")
             print(goal_loc)
@@ -228,7 +235,11 @@ class IsoGoalTask(teacher.Task):
                                                      done=False)
                 steps_since_last_reward = 0
                 #self._move_goal(goal, loc)
-                print("!!!!!!!!!!!!!! SUCC ")
+                import pdb
+                pdb.set_trace()
+                print(
+                    "!!!!!!!!!!!!!! SUCC!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! "
+                )
                 self._move_goal_relative(goal, (1, -1, 0), loc)
 
             elif dist >= self._success_distance_thresh:

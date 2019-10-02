@@ -85,23 +85,21 @@ class ThirdPersonEnv(GazeboEnvBase):
 
         self._agent = self._world.get_agent('kuka_cam')  # test, goal
 
-        loc, dir = self._agent.get_pose()  ## BUG: initial pose is always zero
-        print("agent pose ============+++++")
-        print(loc)
         #self._rendering_cam_pose = "4 -4 3 0 0.4 2.3"
+        self._camera_link_name = "default::kuka_cam::kuka_wrap::camera_link::camera"
+        self._end_link_name = "kuka_cam::kuka_wrap::kuka_lwr_4plus::lwr_arm_7_link"
         assert self._agent is not None
         logging.debug("joint names: %s" % self._agent.get_joint_names())
         self._all_joints = self._agent.get_joint_names()
-        print("=========")
-        print(self._all_joints)
+        # remove the fixed joints
         self._joint_names = list(
             filter(lambda s: s.find('world') == -1 and s.find('camera') == -1,
                    self._all_joints))
-        print("=========")
-        print(self._joint_names)
+
         self._teacher = teacher.Teacher(task_groups_exclusive=False)
         task_group = teacher.TaskGroup()
-        task_group.add_task(IsoGoalTask(goal_name="goal"))
+        task_group.add_task(
+            IsoGoalTask(end_link_name=self._end_link_name, goal_name="goal"))
         self._teacher.add_task_group(task_group)
         self._seq_length = 20
         self._sentence_space = DiscreteSequence(self._teacher.vocab_size,
@@ -174,20 +172,18 @@ class ThirdPersonEnv(GazeboEnvBase):
         controls = dict(zip(self._joint_names, controls))
         teacher_action = self._teacher.teach(sentence)
         self._agent.take_action(controls)
-        t_model = self._world.get_model('kuka_cam')  # test, goal
-        loc, dir = t_model.get_pose()  ## BUG: initial pose is always zero
-        print("kuka_cam pose ============+++++")
-        print(loc)
+        #t_model = self._world.get_model('kuka_cam')  # test, goal
+        #loc, dir = t_model.get_pose()  ## BUG: initial pose is always zero
 
-        t_model = self._world.get_model('kuka_no_cam')  # test, goal
-        loc, dir = t_model.get_pose()  ## BUG: initial pose is always zero
-        print("kuka_no_cam pose ============+++++")
-        print(loc)
+        # t_model = self._world.get_model('kuka_no_cam')  # test, goal
+        # loc, dir = t_model.get_pose()  ## BUG: initial pose is always zero
+        # print("kuka_no_cam pose ============+++++")
+        # print(loc)
 
-        t_model = self._world.get_model('goal')  # test, goal
-        loc, dir = t_model.get_pose()  ## BUG: initial pose is always zero
-        print("ball pose ============+++++")
-        print(loc)
+        # t_model = self._world.get_model('goal')  # test, goal
+        # loc, dir = t_model.get_pose()  ## BUG: initial pose is always zero
+        # print("ball pose ============+++++")
+        # print(loc)
 
         self._world.step(self.NUM_SIMULATION_STEPS)
         obs = self._get_observation(teacher_action.sentence)
@@ -202,8 +198,7 @@ class ThirdPersonEnv(GazeboEnvBase):
 
     def _get_camera_observation(self):
 
-        image = self._agent.get_camera_observation(
-            "default::kuka_cam::kuka_wrap::camera_link::camera")
+        image = self._agent.get_camera_observation(self._camera_link_name)
 
         image = np.array(image, copy=False)
         if self._resized_image_size:
