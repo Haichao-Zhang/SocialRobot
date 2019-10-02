@@ -31,7 +31,7 @@ from social_bot import teacher
 from social_bot.envs.gazebo_base import GazeboEnvBase
 from social_bot.teacher import TeacherAction
 from social_bot.teacher import DiscreteSequence
-from social_bot.teacher_tasks import GoalTask
+from social_bot.teacher_tasks import IsoGoalTask
 import social_bot.pygazebo as gazebo
 
 
@@ -81,7 +81,13 @@ class ThirdPersonEnv(GazeboEnvBase):
         super(ThirdPersonEnv, self).__init__(world_file='third_person.world',
                                              port=port)
         #self._agent = self._world.get_agent()
+        #================== debug
+
         self._agent = self._world.get_agent('kuka_cam')  # test, goal
+
+        loc, dir = self._agent.get_pose()  ## BUG: initial pose is always zero
+        print("agent pose ============+++++")
+        print(loc)
         #self._rendering_cam_pose = "4 -4 3 0 0.4 2.3"
         assert self._agent is not None
         logging.debug("joint names: %s" % self._agent.get_joint_names())
@@ -89,12 +95,13 @@ class ThirdPersonEnv(GazeboEnvBase):
         print("=========")
         print(self._all_joints)
         self._joint_names = list(
-            filter(lambda s: s.find('world') == -1 and s.find('camera') == -1, self._all_joints))
+            filter(lambda s: s.find('world') == -1 and s.find('camera') == -1,
+                   self._all_joints))
         print("=========")
         print(self._joint_names)
         self._teacher = teacher.Teacher(task_groups_exclusive=False)
         task_group = teacher.TaskGroup()
-        task_group.add_task(GoalTask(goal_name="goal"))
+        task_group.add_task(IsoGoalTask(goal_name="goal"))
         self._teacher.add_task_group(task_group)
         self._seq_length = 20
         self._sentence_space = DiscreteSequence(self._teacher.vocab_size,
@@ -107,10 +114,11 @@ class ThirdPersonEnv(GazeboEnvBase):
         self._data_format = data_format
 
         time.sleep(0.1)  # Allow Gazebo threads to be fully ready
-        self.reset()
+        #self.reset()
 
         # Get observation dimension
-        obs_sample = self._get_observation('hello') # 'hello' will be the sentence
+        obs_sample = self._get_observation(
+            'hello')  # 'hello' will be the sentence
         if self._with_language or self._image_with_internal_states:
             self._observation_space = self._construct_dict_space(
                 obs_sample, self._teacher.vocab_size)
@@ -166,6 +174,21 @@ class ThirdPersonEnv(GazeboEnvBase):
         controls = dict(zip(self._joint_names, controls))
         teacher_action = self._teacher.teach(sentence)
         self._agent.take_action(controls)
+        t_model = self._world.get_model('kuka_cam')  # test, goal
+        loc, dir = t_model.get_pose()  ## BUG: initial pose is always zero
+        print("kuka_cam pose ============+++++")
+        print(loc)
+
+        t_model = self._world.get_model('kuka_no_cam')  # test, goal
+        loc, dir = t_model.get_pose()  ## BUG: initial pose is always zero
+        print("kuka_no_cam pose ============+++++")
+        print(loc)
+
+        t_model = self._world.get_model('goal')  # test, goal
+        loc, dir = t_model.get_pose()  ## BUG: initial pose is always zero
+        print("ball pose ============+++++")
+        print(loc)
+
         self._world.step(self.NUM_SIMULATION_STEPS)
         obs = self._get_observation(teacher_action.sentence)
         return (obs, teacher_action.reward, teacher_action.done, {})
@@ -214,9 +237,10 @@ class ThirdPersonEnv(GazeboEnvBase):
 
 class ThirdPersonLanguage(ThirdPersonEnv):
     def __init__(self, port=None):
-        super(ThirdPersonLanguage, self).__init__(with_language=True,
-                                                  image_with_internal_states=True,
-                                                  port=port)
+        super(ThirdPersonLanguage,
+              self).__init__(with_language=True,
+                             image_with_internal_states=True,
+                             port=port)
 
 
 def main():

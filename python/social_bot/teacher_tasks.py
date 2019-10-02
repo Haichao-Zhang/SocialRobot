@@ -35,7 +35,6 @@ class GoalTask(teacher.Task):
     If it is moving away from the goal too much or still not close to the goal after max_steps,
     it will get reward -1.
     """
-
     def __init__(self,
                  max_steps=500,
                  goal_name="goal",
@@ -69,7 +68,7 @@ class GoalTask(teacher.Task):
         agent_sentence = yield
         # agent.reset() ## should reset to its initial loc #====>
         goal = world.get_agent(self._goal_name)
-        loc, dir = agent.get_pose() ## BUG: initial pose is always zero
+        loc, dir = agent.get_pose()  ## BUG: initial pose is always zero
         print("agent pose ======")
         print(loc)
         loc = np.array(loc)
@@ -87,6 +86,8 @@ class GoalTask(teacher.Task):
             loc = np.array(loc)
             goal_loc = np.array(goal_loc)
             dist = np.linalg.norm(loc - goal_loc)
+            print("dist======")
+            print(dist)
             if dist < self._success_distance_thresh:
                 # dir from get_pose is (roll, pitch, roll)
                 dir = np.array([math.cos(dir[2]), math.sin(dir[2])])
@@ -96,8 +97,9 @@ class GoalTask(teacher.Task):
                     # within 45 degrees of the agent direction
                     logging.debug("loc: " + str(loc) + " goal: " +
                                   str(goal_loc) + "dist: " + str(dist))
-                    agent_sentence = yield TeacherAction(
-                        reward=1.0, sentence="well done", done=False)
+                    agent_sentence = yield TeacherAction(reward=1.0,
+                                                         sentence="well done",
+                                                         done=False)
                     steps_since_last_reward = 0
                     #self._move_goal(goal, loc)
                     self._move_goal_relative(goal, (1, -1, 0), loc)
@@ -122,6 +124,7 @@ class GoalTask(teacher.Task):
             if self._initial_dist > self._success_distance_thresh:
                 break
         goal.reset()
+        #loc =（0， 0， 0）
         goal.set_pose((loc, (0, 0, 0)))
 
     def _move_goal_relative(self, goal, origin, agent_loc):
@@ -131,7 +134,8 @@ class GoalTask(teacher.Task):
         range = self._random_range
         while True:
             loc = (random.random() * range - range / 2 + origin[0],
-                   random.random() * range - range / 2 + origin[1], random.random() * range + origin[2])
+                   random.random() * range - range / 2 + origin[1],
+                   random.random() * range + origin[2])
             self._initial_dist = np.linalg.norm(loc - agent_loc)
             if self._initial_dist > self._success_distance_thresh:
                 break
@@ -157,3 +161,127 @@ class GoalTask(teacher.Task):
         logging.debug('Setting Goal to %s', goal_name)
         self._goal_name = goal_name
 
+
+class IsoGoalTask(teacher.Task):
+    """
+    A simple teacher task to find a goal.
+    It is an isotropic task, meaning only distance (no direction) is used as the metric for success.
+    For this task, the agent will receive reward 1 when it is close enough to the goal.
+    If it is moving away from the goal too much or still not close to the goal after max_steps,
+    it will get reward -1.
+    """
+    def __init__(self,
+                 max_steps=500,
+                 goal_name="goal",
+                 success_distance_thresh=0.5,
+                 random_range=1.0):
+        """
+        Args:
+            max_steps (int): episode will end if not reaching gaol in so many steps
+            goal_name (string): name of the goal in the world
+            success_distance_thresh (float): the goal is reached if it's within this distance to the agent
+            random_range (float): the goal's random position range
+        """
+        super().__init__()
+        self._goal_name = goal_name
+        self._success_distance_thresh = success_distance_thresh
+        self._max_steps = max_steps
+        self._random_range = random_range
+        self.task_vocab = ['hello', 'goal', 'well', 'done', 'failed', 'to']
+
+    def run(self, agent, world):
+        """
+        Start a teaching episode for this task.
+        Args:
+            agent (pygazebo.Agent): the learning agent
+            world (pygazebo.World): the simulation world
+        """
+        agent_sentence = yield
+        # agent.reset() ## should reset to its initial loc #====>
+        goal = world.get_agent(self._goal_name)
+        loc, dir = agent.get_pose()  ## BUG: initial pose is always zero
+        print("agent pose ======")
+        print(loc)
+        loc = np.array(loc)
+        #self._move_goal(goal, loc)
+        self._move_goal_relative(goal, (1, -1, 0), loc)
+        steps_since_last_reward = 0
+        while steps_since_last_reward < self._max_steps:
+            steps_since_last_reward += 1
+            loc, dir = agent.get_pose()
+            goal_loc, _ = goal.get_pose()
+            print("agent pose ======")
+            print(loc)
+            print("goal loc ======")
+            print(goal_loc)
+            loc = np.array(loc)
+            goal_loc = np.array(goal_loc)
+            dist = np.linalg.norm(loc - goal_loc)
+            print("dist======")
+            print(dist)
+            if dist < self._success_distance_thresh:
+
+                logging.debug("loc: " + str(loc) + " goal: " + str(goal_loc) +
+                              "dist: " + str(dist))
+                agent_sentence = yield TeacherAction(reward=1.0,
+                                                     sentence="well done",
+                                                     done=False)
+                steps_since_last_reward = 0
+                #self._move_goal(goal, loc)
+                print("!!!!!!!!!!!!!! SUCC ")
+                self._move_goal_relative(goal, (1, -1, 0), loc)
+
+            elif dist >= self._success_distance_thresh:
+                logging.debug("loc: " + str(loc) + " goal: " + str(goal_loc) +
+                              "dist: " + str(dist))
+                yield TeacherAction(reward=-1.0, sentence="failed", done=True)
+
+        logging.debug("loc: " + str(loc) + " goal: " + str(goal_loc) +
+                      "dist: " + str(dist))
+        yield TeacherAction(reward=-1.0, sentence="failed", done=True)
+
+    def _move_goal(self, goal, agent_loc):
+        range = self._random_range
+        while True:
+            loc = (random.random() * range - range / 2,
+                   random.random() * range - range / 2, 0)
+            self._initial_dist = np.linalg.norm(loc - agent_loc)
+            if self._initial_dist > self._success_distance_thresh:
+                break
+        goal.reset()
+        #loc =（0， 0， 0）
+        goal.set_pose((loc, (0, 0, 0)))
+
+    def _move_goal_relative(self, goal, origin, agent_loc):
+        """
+        Move goal with respect to a specified position
+        """
+        range = self._random_range
+        while True:
+            loc = (random.random() * range - range / 2 + origin[0],
+                   random.random() * range - range / 2 + origin[1],
+                   random.random() * range + origin[2])
+            self._initial_dist = np.linalg.norm(loc - agent_loc)
+            if self._initial_dist > self._success_distance_thresh:
+                break
+        goal.reset()
+        goal.set_pose((loc, (0, 0, 0)))
+
+    def get_goal_name(self):
+        """
+        Args:
+            None
+        Returns:
+            Goal's name at this episode
+        """
+        return self._goal_name
+
+    def set_goal_name(self, goal_name):
+        """
+        Args:
+            Goal's name
+        Returns:
+            None
+        """
+        logging.debug('Setting Goal to %s', goal_name)
+        self._goal_name = goal_name
