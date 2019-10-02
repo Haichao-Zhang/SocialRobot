@@ -119,7 +119,7 @@ class ThirdPersonEnv(GazeboEnvBase):
 
         # Get observation dimension
         obs_sample = self._get_observation(
-            'hello')  # 'hello' will be the sentence
+            '[0 0 0]')  # 'hello' will be the sentence
         if self._with_language or self._image_with_internal_states:
             self._observation_space = self._construct_dict_space(
                 obs_sample, self._teacher.vocab_size)
@@ -204,7 +204,7 @@ class ThirdPersonEnv(GazeboEnvBase):
     def _get_state_from_str(self, sentence_raw):
         return np.fromstring(sentence_raw[1:-1], dtype=float, sep=' ')
 
-    def _get_observation(self, sentence_raw):
+    def _get_observation(self, sentence_raw='[0 0 0]'):
         img = self._get_camera_observation()
         if self._image_with_internal_states or self._with_language:
             # observation is an OrderedDict
@@ -217,7 +217,6 @@ class ThirdPersonEnv(GazeboEnvBase):
                 obs['states'] = np.concatenate(
                     (obs['states'], self._get_state_from_str(sentence_raw)),
                     axis=0)
-                #print(obs['states'])
             if self._with_language:
                 # obs['sentence'] = self._teacher.sentence_to_sequence(
                 #     sentence_raw, self._seq_length)
