@@ -120,14 +120,14 @@ class ThirdPersonEnv(GazeboEnvBase):
         # Get observation dimension
         obs_sample = self._get_observation(
             '[0 0 0]')  # 'hello' will be the sentence
-        if self._with_language or self._image_with_internal_states:
-            self._observation_space = self._construct_dict_space(
-                obs_sample, self._teacher.vocab_size)
-        else:
-            self._observation_space = gym.spaces.Box(low=0,
-                                                     high=255,
-                                                     shape=obs_sample.shape,
-                                                     dtype=np.uint8)
+        # if self._with_language or self._image_with_internal_states:
+        #     self._observation_space = self._construct_dict_space(
+        #         obs_sample, self._teacher.vocab_size)
+        # else:
+        self._observation_space = gym.spaces.Box(low=0,
+                                                 high=255,
+                                                 shape=obs_sample.shape,
+                                                 dtype=np.uint8)
 
         control_space = gym.spaces.Box(low=-0.2,
                                        high=0.2,
@@ -182,7 +182,7 @@ class ThirdPersonEnv(GazeboEnvBase):
         self._teacher.reset(self._agent, self._world)
         self._world.step(self.NUM_SIMULATION_STEPS)
         teacher_action = self._teacher.teach("")
-        obs = self._get_observation(teacher_action.sentence)
+        obs = self._get_observation(sentence_raw='[0 0 0]')
         return obs
 
     def _get_camera_observation(self):
@@ -209,8 +209,8 @@ class ThirdPersonEnv(GazeboEnvBase):
         img = self._get_camera_observation()
         if self._image_with_internal_states or self._with_language:
             # observation is an OrderedDict
-            obs = OrderedDict()
-            obs['image'] = img
+            # obs = OrderedDict()
+            # obs['image'] = img
             if self._image_with_internal_states:
                 states = self._get_internal_states(self._agent,
                                                    self._joint_names)
@@ -218,7 +218,7 @@ class ThirdPersonEnv(GazeboEnvBase):
                 states = np.concatenate(
                     (states, self._get_state_from_str(sentence_raw)), axis=0)
 
-                obs['image'] = states
+                obs = states
 
             if self._with_language:
                 # obs['sentence'] = self._teacher.sentence_to_sequence(

@@ -209,12 +209,14 @@ class IsoGoalTask(teacher.Task):
             loc = np.array(loc)
             goal_loc = np.array(goal_loc)
             dist = np.linalg.norm(loc - goal_loc)
+            goal_loc_str = str(np.array(goal_loc))
+
             if dist < self._success_distance_thresh:
 
                 logging.debug("loc: " + str(loc) + " goal: " + str(goal_loc) +
                               "dist: " + str(dist))
                 agent_sentence = yield TeacherAction(reward=1.0,
-                                                     sentence="well done",
+                                                     sentence=goal_loc_str,
                                                      done=True)
                 steps_since_last_reward = 0
                 agent.reset()  ## should reset to its initial loc #====>
@@ -222,15 +224,13 @@ class IsoGoalTask(teacher.Task):
                 loc = np.array(loc)
                 self._move_goal_relative(goal, loc, loc)
             else:
-                goal_loc, _ = goal.get_pose()
-                goal_loc_str = str(np.array(goal_loc))
                 agent_sentence = yield TeacherAction(reward=0.0,
                                                      sentence=goal_loc_str,
                                                      done=False)
 
         logging.debug("loc: " + str(loc) + " goal: " + str(goal_loc) +
                       "dist: " + str(dist))
-        yield TeacherAction(reward=-1.0, sentence="failed", done=True)
+        yield TeacherAction(reward=-1.0, sentence=goal_loc_str, done=True)
 
     def _move_goal(self, goal, agent_loc):
         range = self._random_range
