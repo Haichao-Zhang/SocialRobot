@@ -188,6 +188,7 @@ class IsoGoalTask(teacher.Task):
         self.task_vocab = ['hello', 'goal', 'well', 'done', 'failed', 'to']
 
         self._goal_loc = None
+        self._prev_dist = -1
 
     def run(self, agent, world):
         """
@@ -235,7 +236,7 @@ class IsoGoalTask(teacher.Task):
                 #print("success========")
                 logging.debug("end_loc: " + str(end_loc) + " goal: " +
                               str(goal_loc) + "dist: " + str(dist))
-                agent_sentence = yield TeacherAction(reward=1.0,
+                agent_sentence = yield TeacherAction(reward=1,
                                                      sentence=goal_loc_str,
                                                      done=True)
                 steps_since_last_reward = 0
@@ -244,7 +245,9 @@ class IsoGoalTask(teacher.Task):
                 self._move_goal_relative(goal, loc, loc)
                 self._goal_loc = None
             else:
-                agent_sentence = yield TeacherAction(reward=-0.1,
+                # 1.5 ~ sqrt(2)
+                shaping_reward = -0.1 + 0.1 * (1.5 - np.min([dist, 1.5]))
+                agent_sentence = yield TeacherAction(reward=shaping_reward,
                                                      sentence=goal_loc_str,
                                                      done=False)
 
