@@ -187,6 +187,8 @@ class IsoGoalTask(teacher.Task):
         self._random_range = random_range
         self.task_vocab = ['hello', 'goal', 'well', 'done', 'failed', 'to']
 
+        self._goal_loc = None
+
     def run(self, agent, world):
         """
         Start a teaching episode for this task.
@@ -201,6 +203,11 @@ class IsoGoalTask(teacher.Task):
         agent_sentence = yield
         agent.reset()  ## should reset to its initial loc #====>
         goal = world.get_agent(self._goal_name)
+        loc_a, _ = agent.get_pose()
+
+        goal = world.get_agent(self._goal_name)
+        goal_loc, _ = goal.get_pose()
+
         loc = get_agent_loc()
         loc = np.array(loc)
         self._move_goal_relative(goal, loc, loc)
@@ -208,8 +215,8 @@ class IsoGoalTask(teacher.Task):
         while steps_since_last_reward < self._max_steps:
             steps_since_last_reward += 1
             loc = get_agent_loc()
-            goal_loc, _ = goal.get_pose()
             loc = np.array(loc)
+
             goal_loc = np.array(goal_loc)
             dist = np.linalg.norm(loc - goal_loc)
             goal_loc_str = str(np.array(goal_loc - self._fixed_agent_loc))

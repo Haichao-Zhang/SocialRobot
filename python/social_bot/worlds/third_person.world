@@ -16,16 +16,16 @@
     </include>
 
     <model name="kuka_cam">
+      <pose>1 -1 0 0 0 0</pose>
       <include>
         <uri>model://kuka_with_cam</uri>
-        <pose>1 -1 0 0 0 0</pose>
       </include>
     </model>
 
     <model name="kuka_no_cam">
+      <pose>-1 1 0 0 0 0</pose>
       <include>
         <uri>model://kuka</uri>
-        <pose>-1 1 0 0 0 0</pose>
       </include>
     </model>
 
