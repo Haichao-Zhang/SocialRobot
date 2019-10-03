@@ -196,43 +196,53 @@ class IsoGoalTask(teacher.Task):
             agent (pygazebo.Agent): the learning agent
             world (pygazebo.World): the simulation world
         """
-        def get_agent_loc():
+        def get_agent_end_loc():
             loc, dir = agent.get_link_pose(self._end_link_name)
             return loc
 
         agent_sentence = yield
         agent.reset()  ## should reset to its initial loc #====>
         goal = world.get_agent(self._goal_name)
-        loc_a, _ = agent.get_pose()
 
-        goal = world.get_agent(self._goal_name)
-        goal_loc, _ = goal.get_pose()
+        # goal_loc, _ = goal.get_pose()
+        # print(goal_loc)
 
-        loc = get_agent_loc()
-        loc = np.array(loc)
+        # if self._goal_loc is None:
+        #     goal_loc, _ = goal.get_pose()
+        #     goal_loc = np.array(goal_loc)
+        #     self._goal_loc = goal_loc
+
+        loc = self._fixed_agent_loc
         self._move_goal_relative(goal, loc, loc)
         steps_since_last_reward = 0
         while steps_since_last_reward < self._max_steps:
             steps_since_last_reward += 1
-            loc = get_agent_loc()
-            loc = np.array(loc)
 
-            goal_loc = np.array(goal_loc)
-            dist = np.linalg.norm(loc - goal_loc)
+            end_loc = get_agent_end_loc()  # current end pos
+            end_loc = np.array(end_loc)
+
+            #goal_loc = self._goal_loc
+            goal_loc, _ = goal.get_pose()
+            # print("goal_loc=======")
+            # print(goal_loc)
+            # print("end_loc=======")
+            # print(end_loc)
+            dist = np.linalg.norm(end_loc - goal_loc)
+            # relative coordinate
             goal_loc_str = str(np.array(goal_loc - self._fixed_agent_loc))
 
             if dist < self._success_distance_thresh:
-
-                logging.debug("loc: " + str(loc) + " goal: " + str(goal_loc) +
-                              "dist: " + str(dist))
+                #print("success========")
+                logging.debug("end_loc: " + str(end_loc) + " goal: " +
+                              str(goal_loc) + "dist: " + str(dist))
                 agent_sentence = yield TeacherAction(reward=1.0,
                                                      sentence=goal_loc_str,
                                                      done=True)
                 steps_since_last_reward = 0
                 agent.reset()  ## should reset to its initial loc #====>
-                loc = get_agent_loc()
-                loc = np.array(loc)
+                loc = self._fixed_agent_loc
                 self._move_goal_relative(goal, loc, loc)
+                self._goal_loc = None
             else:
                 agent_sentence = yield TeacherAction(reward=-0.1,
                                                      sentence=goal_loc_str,
