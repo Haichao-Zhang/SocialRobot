@@ -86,6 +86,7 @@ class ThirdPersonEnv(GazeboEnvBase):
         self._rendering_cam_pose = "4 -4 3 0 0.4 2.3"
         self._camera_link_name = "default::kuka_cam::kuka_wrap::camera_link::camera"
         self._end_link_name = "kuka_cam::kuka_wrap::kuka_lwr_4plus::lwr_arm_7_link"
+        self._fixed_agent_loc = np.array([1, -1, 0])
         assert self._agent is not None
         logging.debug("joint names: %s" % self._agent.get_joint_names())
         self._all_joints = self._agent.get_joint_names()
@@ -97,7 +98,8 @@ class ThirdPersonEnv(GazeboEnvBase):
         self._teacher = teacher.Teacher(task_groups_exclusive=False)
         task_group = teacher.TaskGroup()
         task_group.add_task(
-            IsoGoalTask(end_link_name=self._end_link_name,
+            IsoGoalTask(fixed_agent_loc=self._fixed_agent_loc,
+                        end_link_name=self._end_link_name,
                         goal_name="goal",
                         max_steps=500,
                         success_distance_thresh=0.5,

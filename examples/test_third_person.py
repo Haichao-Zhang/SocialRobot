@@ -21,8 +21,7 @@ def main():
         while True:
             control = [(random.random() - 0.5) * 100
                        for i in range(action_space.shape[0])]
-            obs, reward, done, info = env.step(
-                dict(control=control, sentence="hello"))
+            obs, reward, done, info = env.step(control)
             steps += 1
             if done:
                 logging.info("done reward: " + str(reward))

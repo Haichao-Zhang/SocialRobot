@@ -163,6 +163,7 @@ class IsoGoalTask(teacher.Task):
     it will get reward -1.
     """
     def __init__(self,
+                 fixed_agent_loc,
                  end_link_name,
                  goal_name="goal",
                  max_steps=500,
@@ -170,6 +171,7 @@ class IsoGoalTask(teacher.Task):
                  random_range=1.0):
         """
         Args:
+            fixed_agent_loc: used for computing the relative goal location for policy learning
             end_link_name(string): the name of the link from the agent that will be used for determining succuess or failure
             max_steps (int): episode will end if not reaching gaol in so many steps
             goal_name (string): name of the goal in the world
@@ -177,6 +179,7 @@ class IsoGoalTask(teacher.Task):
             random_range (float): the goal's random position range
         """
         super().__init__()
+        self._fixed_agent_loc = fixed_agent_loc
         self._end_link_name = end_link_name
         self._goal_name = goal_name
         self._success_distance_thresh = success_distance_thresh
@@ -209,7 +212,7 @@ class IsoGoalTask(teacher.Task):
             loc = np.array(loc)
             goal_loc = np.array(goal_loc)
             dist = np.linalg.norm(loc - goal_loc)
-            goal_loc_str = str(np.array(goal_loc))
+            goal_loc_str = str(np.array(goal_loc - self._fixed_agent_loc))
 
             if dist < self._success_distance_thresh:
 
