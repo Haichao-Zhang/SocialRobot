@@ -81,7 +81,7 @@ class ThirdPersonEnv(GazeboEnvBase):
                 to images with shape `(channels, height, width)`.
         """
         super(ThirdPersonEnv, self).__init__(world_file='third_person.world',
-                                             port=port)
+                                             port=11445)
         self._agent = self._world.get_agent('kuka_cam')  # test, goal
 
         self._rendering_cam_pose = "4 -4 3 0 0.4 2.3"
@@ -104,8 +104,8 @@ class ThirdPersonEnv(GazeboEnvBase):
             IsoGoalTask(fixed_agent_loc=self._fixed_agent_loc,
                         end_link_name=self._end_link_name,
                         goal_name="goal",
-                        max_steps=500,
-                        success_distance_thresh=0.2,
+                        max_steps=100,
+                        success_distance_thresh=0.5,
                         random_range=1))
         self._teacher.add_task_group(task_group)
         self._seq_length = 20
