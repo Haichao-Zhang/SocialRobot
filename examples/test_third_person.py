@@ -18,11 +18,13 @@ def main():
     for _ in range(10000000):
         obs = env.reset()
         action_space = env.action_space
+        cnt = 0
         while True:
             control = [(random.random() - 0.5) * 100
                        for i in range(action_space.shape[0])]
             obs, reward, done, info = env.step(control)
             steps += 1
+            print(cnt)
             if done:
                 logging.info("done reward: " + str(reward))
                 break
