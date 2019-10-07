@@ -101,8 +101,8 @@ class ThirdPersonEnv(GazeboEnvBase):
             IsoGoalTask(fixed_agent_loc=self._fixed_agent_loc,
                         end_link_name=self._end_link_name,
                         goal_name="goal",
-                        max_steps=50,
-                        success_distance_thresh=0.3,
+                        max_steps=500,
+                        success_distance_thresh=0.5,
                         random_range=1))
         self._teacher.add_task_group(task_group)
         self._seq_length = 20
@@ -126,12 +126,11 @@ class ThirdPersonEnv(GazeboEnvBase):
         #     self._observation_space = self._construct_dict_space(
         #         obs_sample, self._teacher.vocab_size)
         # else:
-        print(obs_sample.shape)
         # the observation space range for latent space should be [-K, K]
         self._observation_space = gym.spaces.Box(low=-10.0,
                                                  high=10.0,
                                                  shape=obs_sample.shape,
-                                                 dtype=np.uint8)
+                                                 dtype=np.float32)  # np.uint8
 
         # the range for the control space should be increased as well
         control_space = gym.spaces.Box(low=-10.0,
