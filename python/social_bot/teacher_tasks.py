@@ -26,6 +26,7 @@ from social_bot.teacher import TeacherAction
 import social_bot.pygazebo as gazebo
 
 from absl import logging
+logging.set_verbosity(logging.DEBUG)
 
 
 class GoalTask(teacher.Task):
@@ -230,10 +231,11 @@ class IsoGoalTask(teacher.Task):
             # print(end_loc)
             dist = np.linalg.norm(end_loc - goal_loc)
             # relative coordinate
-            goal_loc_str = str(np.array(goal_loc - self._fixed_agent_loc))
+            relative_coord = np.array(goal_loc - self._fixed_agent_loc)
+            relative_coord[-1] = 0
+            goal_loc_str = str(relative_coord)
 
             if dist < self._success_distance_thresh:
-                #print("success========")
                 logging.debug("end_loc: " + str(end_loc) + " goal: " +
                               str(goal_loc) + "dist: " + str(dist))
                 agent_sentence = yield TeacherAction(reward=1,
@@ -246,19 +248,24 @@ class IsoGoalTask(teacher.Task):
                 self._goal_loc = None
                 self._prev_dist = 1000
             else:
+                logging.debug("_prevdist " + str(self._prev_dist) + "dist: " +
+                              str(dist))
                 if dist < self._prev_dist:
                     self._prev_dist = dist
                     # 1.5 ~ sqrt(2)
-                    shaping_reward = -0.1 + 0.1 * (1.5 - np.min([dist, 1.5]))
-                    #print(shaping_reward)
-                else:
-                    shaping_reward = -0.1
+                    #shaping_reward = -0.01 + 0.1 * (1.5 - np.min([dist, 1.5]))
+                shaping_reward = 0.1 * (self._prev_dist - dist)
+                #print(shaping_reward)
+                # else:
+                #     shaping_reward = -0.1
                 agent_sentence = yield TeacherAction(reward=shaping_reward,
                                                      sentence=goal_loc_str,
                                                      done=False)
 
         logging.debug("loc: " + str(loc) + " goal: " + str(goal_loc) +
                       "dist: " + str(dist))
+        # reset before the FAILURE end
+        self._prev_dist = 1000
         yield TeacherAction(reward=-1.0, sentence=goal_loc_str, done=True)
 
     def _move_goal(self, goal, agent_loc):
