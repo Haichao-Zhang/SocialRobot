@@ -188,7 +188,7 @@ class IsoGoalTask(teacher.Task):
         self.task_vocab = ['hello', 'goal', 'well', 'done', 'failed', 'to']
 
         self._goal_loc = None
-        self._prev_dist = -1
+        self._prev_dist = 1000
 
     def run(self, agent, world):
         """
@@ -244,9 +244,15 @@ class IsoGoalTask(teacher.Task):
                 loc = self._fixed_agent_loc
                 self._move_goal_relative(goal, loc, loc)
                 self._goal_loc = None
+                self._prev_dist = 1000
             else:
-                # 1.5 ~ sqrt(2)
-                shaping_reward = -0.1 + 0.1 * (1.5 - np.min([dist, 1.5]))
+                if dist < self._prev_dist:
+                    self._prev_dist = dist
+                    # 1.5 ~ sqrt(2)
+                    shaping_reward = -0.1 + 0.1 * (1.5 - np.min([dist, 1.5]))
+                    #print(shaping_reward)
+                else:
+                    shaping_reward = -0.1
                 agent_sentence = yield TeacherAction(reward=shaping_reward,
                                                      sentence=goal_loc_str,
                                                      done=False)
