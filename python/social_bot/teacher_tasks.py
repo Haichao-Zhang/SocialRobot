@@ -397,10 +397,6 @@ class PoseGoalTask(teacher.Task):
             expert_pose = _get_internal_states(self._expert_name,
                                                self._expert_joints)
 
-            print("agent_pose=======")
-            print(expert_pose)
-            print("agent_pose=======")
-            print(agent_pose)
             dist = np.linalg.norm(agent_pose - expert_pose)
             # relative coordinate
             # relative_coord = np.array(goal_loc - self._fixed_agent_loc)

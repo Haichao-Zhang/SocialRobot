@@ -21,22 +21,6 @@ from absl import logging
 from gym import spaces
 
 
-class DiscreteSequence(gym.Space):
-    """
-    gym.Space object for language sequence
-    """
-
-    def __init__(self, vocab_size, max_length):
-        """
-        Args:
-            vocab_size (int): number of different tokens
-            max_length (int): maximal length of the sequence
-        """
-        super().__init__(shape=(max_length, ), dtype=np.int32)
-        self._vocab_size = vocab_size
-        self._max_length = max_length
-
-
 class TeacherAction(object):
     def __init__(self, reward=0.0, sentence="", done=False, is_idle=False):
         """
@@ -54,7 +38,6 @@ class Task(object):
 
     A Task is for teaching a single task.
     """
-
     def __init__(self):
         self.reward_weight = 1.0
 
@@ -101,7 +84,6 @@ class TaskGroup(object):
     task can run at one time. A random task is chosen after the current task is
     finished.
     """
-
     def __init__(self):
         self._tasks = []
         self._current_task = None
@@ -353,8 +335,9 @@ class Teacher(object):
         self._switch_task_group()
 
     def _switch_task_group(self):
-        self._current_task_group = np.random.choice(
-            self._task_groups, p=np.array(self._weights) / sum(self._weights))
+        self._current_task_group = np.random.choice(self._task_groups,
+                                                    p=np.array(self._weights) /
+                                                    sum(self._weights))
 
     def teach(self, agent_sentence):
         """Generate TeacherAction.
@@ -388,8 +371,7 @@ class Teacher(object):
                 g = self._task_groups.pop(active_group_id)
                 self._task_groups.insert(0, g)
             return_action = TeacherAction(final_reward, final_sentence, done)
-        logging.debug(
-            "Teacher Reward: %f, Sentence: %s, Done: %d",
-            return_action.reward, return_action.sentence,
-            return_action.done)
+        logging.debug("Teacher Reward: %f, Sentence: %s, Done: %d",
+                      return_action.reward, return_action.sentence,
+                      return_action.done)
         return return_action
