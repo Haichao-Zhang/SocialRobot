@@ -282,7 +282,7 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
                 to images with shape `(channels, height, width)`.
         """
         super(ThirdPersonAgentEnv,
-              self).__init__(world_file='third_person.world', port=11445)
+              self).__init__(world_file='third_person.world', port=12345)
         self._agent = self._world.get_agent('kuka_cam')  # test, goal
         self._expert = self._world.get_agent('kuka_no_cam')  # expert
 
