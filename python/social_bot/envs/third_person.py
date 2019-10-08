@@ -81,7 +81,7 @@ class ThirdPersonEnv(GazeboEnvBase):
                 to images with shape `(channels, height, width)`.
         """
         super(ThirdPersonEnv, self).__init__(world_file='third_person.world',
-                                             port=11445)
+                                             port=port)
         self._agent = self._world.get_agent('kuka_cam')  # test, goal
 
         self._rendering_cam_pose = "4 -4 3 0 0.4 2.3"
