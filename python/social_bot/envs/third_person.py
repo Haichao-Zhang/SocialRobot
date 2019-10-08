@@ -282,13 +282,20 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
                 to images with shape `(channels, height, width)`.
         """
         super(ThirdPersonAgentEnv,
-              self).__init__(world_file='third_person.world', port=port)
+              self).__init__(world_file='third_person.world', port=11445)
         self._agent = self._world.get_agent('kuka_cam')  # test, goal
+        self._expert = self._world.get_agent('kuka_no_cam')  # expert
 
         self._rendering_cam_pose = "4 -4 3 0 0.4 2.3"
         self._camera_link_name = "default::kuka_cam::kuka_wrap::camera_link::camera"
         self._end_link_name = "kuka_cam::kuka_wrap::kuka_lwr_4plus::lwr_arm_7_link"
-        self._fixed_agent_loc = np.array([1, -1, 0])
+
+        agent_loc, _ = self._agent.get_pose()
+        self._fixed_agent_loc = np.array(agent_loc)
+
+        self._demo_steps = 10  # number of demonstration steps
+        self._demo_step_cnt = 0
+
         assert self._agent is not None
         logging.debug("joint names: %s" % self._agent.get_joint_names())
         self._all_joints = self._agent.get_joint_names()
@@ -296,6 +303,11 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
         self._joint_names = list(
             filter(lambda s: s.find('world') == -1 and s.find('camera') == -1,
                    self._all_joints))
+
+        self._all_joints_expert = self._expert.get_joint_names()
+        self._joint_names_expert = list(
+            filter(lambda s: s.find('world') == -1 and s.find('camera') == -1,
+                   self._all_joints_expert))
 
         self._teacher = teacher.Teacher(task_groups_exclusive=False)
         task_group = teacher.TaskGroup()
@@ -361,25 +373,29 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
         """
         Args:
             action (dict|int): If with_language, action is a dictionary with key "control" and "sentence".
-                    action['control'] is a vector whose dimention is
-                    len(_joint_names). action['sentence'] is a sentence sequence.
-                    If not with_language, it is an int for the action id.
+                    action['control_expert'] is a control vector for the expert
+                    action['control_agent']  is a control vector for the agent
+                    len(_joint_names).
+
         Returns:
             If with_language, it is a dictionary with key 'obs' and 'sentence'
             If not with_language, it is a numpy.array for observation
         """
-        if self._with_language:
-            sentence = action.get('sentence', None)
-            if type(sentence) != str:
-                sentence = self._teacher.sequence_to_sentence(sentence)
-            controls = action['control']
+
+        sentence = ''
+        #controls = action['control']
+        if self._demo_step_cnt < self._demo_steps:  # demo phase
+            self._demo_step_cnt += 1
+            controls = action['control_expert']
+            controls = dict(zip(self._joint_names_expert, controls))
+            teacher_action = self._teacher.teach(sentence)
+            self._expert.take_action(controls)
         else:
-            sentence = ''
-            #controls = action['control']
-            controls = action
-        controls = dict(zip(self._joint_names, controls))
-        teacher_action = self._teacher.teach(sentence)  # return goal location
-        self._agent.take_action(controls)
+            controls = action['control_agent']
+            controls = dict(zip(self._joint_names, controls))
+            teacher_action = self._teacher.teach(sentence)
+            self._agent.take_action(controls)
+
         self._world.step(self.NUM_SIMULATION_STEPS)
         obs = self._get_observation(teacher_action.sentence)
         return (obs, teacher_action.reward, teacher_action.done, {})
@@ -389,6 +405,8 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
         self._world.step(self.NUM_SIMULATION_STEPS)
         teacher_action = self._teacher.teach("")
         obs = self._get_observation(sentence_raw='[0 0 0]')
+        # reset demo step count
+        self._demo_step_cnt = 0
         return obs
 
     def _get_camera_observation(self):
@@ -422,6 +440,9 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
             if self._image_with_internal_states:
                 states = self._get_internal_states(self._agent,
                                                    self._joint_names)
+
+                states_expert = self._get_internal_states(
+                    self._expert, self._joint_names_expert)
                 # append goal location to states
                 states = np.concatenate(
                     (states, self._get_state_from_str(sentence_raw)), axis=0)

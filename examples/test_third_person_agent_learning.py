@@ -10,7 +10,7 @@ import os
 
 
 def main():
-    env = gym.make("SocialBot-Third-Person-v0")
+    env = gym.make("SocialBot-Third-Person-Agent-v0")
     steps = 0
     t0 = time.time()
     proc = psutil.Process(os.getpid())
@@ -21,7 +21,11 @@ def main():
         while True:
             control = [(random.random() - 0.5) * 100
                        for i in range(action_space.shape[0])]
-            obs, reward, done, info = env.step(control)
+            action = {
+                "control_expert": control,
+                "control_agent": control,
+            }
+            obs, reward, done, info = env.step(action)
             steps += 1
             if done:
                 logging.info("done reward: " + str(reward))
