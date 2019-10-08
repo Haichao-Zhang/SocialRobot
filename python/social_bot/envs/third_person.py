@@ -31,7 +31,7 @@ from social_bot import teacher
 from social_bot.envs.gazebo_base import GazeboEnvBase
 from social_bot.teacher import TeacherAction
 from social_bot.teacher import DiscreteSequence
-from social_bot.teacher_tasks import IsoGoalTask
+from social_bot.teacher_tasks import IsoGoalTask, PoseGoalTask
 import social_bot.pygazebo as gazebo
 
 
@@ -283,8 +283,10 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
         """
         super(ThirdPersonAgentEnv,
               self).__init__(world_file='third_person.world', port=12345)
-        self._agent = self._world.get_agent('kuka_cam')  # test, goal
-        self._expert = self._world.get_agent('kuka_no_cam')  # expert
+        self._agent_name = 'kuka_cam'
+        self._expert_name = 'kuka_no_cam'
+        self._agent = self._world.get_agent(self._agent_name)  # test, goal
+        self._expert = self._world.get_agent(self._expert_name)  # expert
 
         self._rendering_cam_pose = "4 -4 3 0 0.4 2.3"
         self._camera_link_name = "default::kuka_cam::kuka_wrap::camera_link::camera"
@@ -311,14 +313,17 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
 
         self._teacher = teacher.Teacher(task_groups_exclusive=False)
         task_group = teacher.TaskGroup()
+
         task_group.add_task(
-            IsoGoalTask(fixed_agent_loc=self._fixed_agent_loc,
-                        end_link_name=self._end_link_name,
-                        goal_name="goal",
-                        max_steps=500,
-                        success_distance_thresh=0.5,
-                        random_range=1))
+            PoseGoalTask(expert_name=self._expert_name,
+                         expert_joints=self._joint_names_expert,
+                         agent_name=self._agent_name,
+                         agent_joints=self._joint_names,
+                         pose_func=self._get_internal_states,
+                         max_steps=500,
+                         success_distance_thresh=0.5))
         self._teacher.add_task_group(task_group)
+
         self._seq_length = 20
         # self._sentence_space = DiscreteSequence(self._teacher.vocab_size,
         #                                         self._seq_length)

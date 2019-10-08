@@ -316,3 +316,126 @@ class IsoGoalTask(teacher.Task):
         """
         logging.debug('Setting Goal to %s', goal_name)
         self._goal_name = goal_name
+
+
+class PoseGoalTask(teacher.Task):
+    """
+    A task for reaching a specified pose
+    """
+    def __init__(
+            self,
+            expert_name,
+            expert_joints,
+            agent_name,
+            agent_joints,
+            pose_func,
+            max_steps=500,
+            success_distance_thresh=0.2,
+    ):
+        """
+        Args:
+            target_pose_loc: the target pose location as the goal
+            end_link_name(string): the name of the link from the agent that will be used for determining succuess or failure
+            max_steps (int): episode will end if not reaching gaol in so many steps
+            goal_name (string): name of the goal in the world
+            success_distance_thresh (float): the goal is reached if it's within this distance to the agent
+            random_range (float): the goal's random position range
+        """
+        super().__init__()
+        self._expert_name = expert_name
+        self._expert_joints = expert_joints
+        self._agent_name = agent_name
+        self._agent_joints = agent_joints
+        self._pose_func = pose_func
+        self._success_distance_thresh = success_distance_thresh
+        self._max_steps = max_steps
+        self.task_vocab = ['hello', 'goal', 'well', 'done', 'failed', 'to']
+
+        self._goal_loc = None
+        self._prev_dist = 1000
+
+    def run(self, agent, world):
+        """
+        Start a teaching episode for this task.
+        Args:
+            agent (pygazebo.Agent): the learning agent
+            world (pygazebo.World): the simulation world
+        """
+
+        agent_sentence = yield
+        agent.reset()  ## should reset to its initial loc #====>
+
+        agent = world.get_agent(self._agent_name)  # test, goal
+        expert = world.get_agent(self._expert_name)  # expert
+
+        def get_pose(agent_name, joint_names):
+            agent = world.get_agent(agent_name)  # test, goal
+            return world._get_internal_states(agent, joint_names)
+
+        def _get_internal_states(agent_name, agent_joints):
+            agent = world.get_agent(agent_name)  # test, goal
+            joint_pos = []
+            joint_vel = []
+            for joint_id in range(len(agent_joints)):
+                joint_name = agent_joints[joint_id]
+                joint_state = agent.get_joint_state(joint_name)
+                joint_pos.append(joint_state.get_positions())
+                joint_vel.append(joint_state.get_velocities())
+            joint_pos = np.array(joint_pos).flatten()
+            joint_vel = np.array(joint_vel).flatten()
+            # pos of continous joint could be huge, wrap the range to [-pi, pi)
+            joint_pos = (joint_pos + np.pi) % (2 * np.pi) - np.pi
+            internal_states = np.concatenate((joint_pos, joint_vel), axis=0)
+            return internal_states
+
+        steps_since_last_reward = 0
+        while steps_since_last_reward < self._max_steps:
+            steps_since_last_reward += 1
+
+            agent_pose = _get_internal_states(
+                self._agent_name, self._agent_joints)  # current end pos
+            expert_pose = _get_internal_states(self._expert_name,
+                                               self._expert_joints)
+
+            print("agent_pose=======")
+            print(expert_pose)
+            print("agent_pose=======")
+            print(agent_pose)
+            dist = np.linalg.norm(agent_pose - expert_pose)
+            # relative coordinate
+            # relative_coord = np.array(goal_loc - self._fixed_agent_loc)
+            # relative_coord[-1] = 0
+            goal_loc_str = str(expert_pose)
+
+            if dist < self._success_distance_thresh:
+                logging.debug("end_loc: " + str(agent_pose) + " goal: " +
+                              str(expert_pose) + "dist: " + str(dist))
+                agent_sentence = yield TeacherAction(reward=1,
+                                                     sentence=goal_loc_str,
+                                                     done=True)
+                steps_since_last_reward = 0
+                agent.reset()  ## should reset to its initial loc #====>
+                loc = self.agent_pose
+                #self._move_goal_relative(goal, loc, loc)
+                #self._goal_loc = None
+                self._prev_dist = 1000
+            else:
+                logging.debug("_prevdist " + str(self._prev_dist) + "dist: " +
+                              str(dist))
+                if dist < self._prev_dist:
+                    self._prev_dist = dist
+                    # 1.5 ~ sqrt(2)
+                    #shaping_reward = -0.01 + 0.1 * (1.5 - np.min([dist, 1.5]))
+                shaping_reward = 0.1 * (self._prev_dist - dist)
+                #print(shaping_reward)
+                # else:
+                #     shaping_reward = -0.1
+                agent_sentence = yield TeacherAction(reward=shaping_reward,
+                                                     sentence=goal_loc_str,
+                                                     done=False)
+
+        logging.debug("loc: " + str(agent_pose) + " goal: " +
+                      str(expert_pose) + "dist: " + str(dist))
+        # reset before the FAILURE end
+        self._prev_dist = 1000
+        yield TeacherAction(reward=-1.0, sentence=goal_loc_str, done=True)
