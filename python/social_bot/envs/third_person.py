@@ -346,10 +346,23 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
         #         obs_sample, self._teacher.vocab_size)
         # else:
         # the observation space range for latent space should be [-K, K]
-        self._observation_space = gym.spaces.Box(low=-10.0,
-                                                 high=10.0,
-                                                 shape=obs_sample.shape,
-                                                 dtype=np.float32)  # np.uint8
+        state_agent = gym.spaces.Box(low=-10.0,
+                                     high=10.0,
+                                     shape=obs_sample["state"].shape,
+                                     dtype=np.float32)  # np.uint8
+
+        image_agent = gym.spaces.Box(low=0,
+                                     high=255,
+                                     shape=obs_sample["image"].shape,
+                                     dtype=np.float32)  # np.uint8
+
+        observation_agent = gym.spaces.Dict(state=state_agent,
+                                            image=image_agent)
+        # self._observation_space = observation_space_agent
+
+        self._observation_space = gym.spaces.Dict(
+            observation_agent=observation_agent,
+            observation_expert=state_agent)
 
         # the range for the control space should be increased as well
         control_space_agent = gym.spaces.Box(low=-10.0,
@@ -449,7 +462,7 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
         if self._image_with_internal_states or self._with_language:
             # observation is an OrderedDict
             obs = OrderedDict()
-            #obs['image'] = img
+            obs['image'] = img
             if self._image_with_internal_states:
                 states = self._get_internal_states(self._agent,
                                                    self._joint_names)
@@ -457,8 +470,8 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
                 states_expert = self._get_internal_states(
                     self._expert, self._joint_names_expert)
                 # we have expert states and not visible outside, thus aims to learn the mapping between visual image and states
-                #obs['states'] = states
-                obs = states
+                obs['state'] = states
+                #obs = states
 
             if self._with_language:
                 # obs['sentence'] = self._teacher.sentence_to_sequence(
@@ -467,6 +480,32 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
         else:  # observation is pure image
             obs = img
         return obs
+
+    # def _get_observation(self, sentence_raw='[0 0 0]'):
+    #     # in the agent learning case, we construct the observation as
+    #     # image + self.states
+    #     img = self._get_camera_observation()
+    #     if self._image_with_internal_states or self._with_language:
+    #         # observation is an OrderedDict
+    #         obs = OrderedDict()
+    #         #obs['image'] = img
+    #         if self._image_with_internal_states:
+    #             states = self._get_internal_states(self._agent,
+    #                                                self._joint_names)
+
+    #             states_expert = self._get_internal_states(
+    #                 self._expert, self._joint_names_expert)
+    #             # we have expert states and not visible outside, thus aims to learn the mapping between visual image and states
+    #             #obs['states'] = states
+    #             obs = states
+
+    #         if self._with_language:
+    #             # obs['sentence'] = self._teacher.sentence_to_sequence(
+    #             #     sentence_raw, self._seq_length)
+    #             obs['sentence'] = sentence_raw
+    #     else:  # observation is pure image
+    #         obs = img
+    #     return obs
 
 
 class ThirdPersonLanguage(ThirdPersonEnv):
