@@ -352,15 +352,23 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
                                                  dtype=np.float32)  # np.uint8
 
         # the range for the control space should be increased as well
-        control_space = gym.spaces.Box(low=-10.0,
-                                       high=10.0,
-                                       shape=[len(self._joint_names)],
-                                       dtype=np.float32)
-        if with_language:
-            self._action_space = gym.spaces.Dict(control=control_space,
-                                                 sentence=self._sentence_space)
-        else:
-            self._action_space = control_space
+        control_space_agent = gym.spaces.Box(low=-10.0,
+                                             high=10.0,
+                                             shape=[len(self._joint_names)],
+                                             dtype=np.float32)
+
+        control_space_expert = gym.spaces.Box(
+            low=-10.0,
+            high=10.0,
+            shape=[len(self._joint_names_expert)],
+            dtype=np.float32)
+        # self._action_space = gym.spaces.Dict(
+        #     control_agent=control_space_agent,
+        #     control_expert=control_space_expert)
+
+        self._action_space = gym.spaces.Dict(
+            control_agent=control_space_agent,
+            control_expert=control_space_expert)
 
     @property
     def observation_space(self):
@@ -440,18 +448,16 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
         img = self._get_camera_observation()
         if self._image_with_internal_states or self._with_language:
             # observation is an OrderedDict
-            # obs = OrderedDict()
-            # obs['image'] = img
+            obs = OrderedDict()
+            #obs['image'] = img
             if self._image_with_internal_states:
                 states = self._get_internal_states(self._agent,
                                                    self._joint_names)
 
                 states_expert = self._get_internal_states(
                     self._expert, self._joint_names_expert)
-                # append goal location to states
-                states = np.concatenate(
-                    (states, self._get_state_from_str(sentence_raw)), axis=0)
-
+                # we have expert states and not visible outside, thus aims to learn the mapping between visual image and states
+                #obs['states'] = states
                 obs = states
 
             if self._with_language:
