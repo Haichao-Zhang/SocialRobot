@@ -282,11 +282,14 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
                 to images with shape `(channels, height, width)`.
         """
         super(ThirdPersonAgentEnv,
-              self).__init__(world_file='third_person.world', port=12345)
+              self).__init__(world_file='third_person.world', port=port)
         self._agent_name = 'kuka_cam'
         self._expert_name = 'kuka_no_cam'
         self._agent = self._world.get_agent(self._agent_name)  # test, goal
         self._expert = self._world.get_agent(self._expert_name)  # expert
+
+        self._teacher_domain_name = "observation_teacher"
+        self._learner_domain_name = "observation_learner"
 
         self._rendering_cam_pose = "4 -4 3 0 0.4 2.3"
         self._camera_link_name = "default::kuka_cam::kuka_wrap::camera_link::camera"
@@ -295,7 +298,7 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
         agent_loc, _ = self._agent.get_pose()
         self._fixed_agent_loc = np.array(agent_loc)
 
-        self._demo_steps = 10  # number of demonstration steps
+        self._demo_steps = 0  # number of demonstration steps
         self._demo_step_cnt = 0
 
         assert self._agent is not None
@@ -339,31 +342,38 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
         self.reset()
 
         # Get observation dimension
-        obs_sample = self._get_observation(
-            '[0 0 0]')  # 'hello' will be the sentence
+        obs_sample = self._get_observation('[0 0 0]')
+        # 'hello' will be the sentence
         # if self._with_language or self._image_with_internal_states:
         #     self._observation_space = self._construct_dict_space(
         #         obs_sample, self._teacher.vocab_size)
         # else:
         # the observation space range for latent space should be [-K, K]
-        state_agent = gym.spaces.Box(low=-10.0,
-                                     high=10.0,
-                                     shape=obs_sample["state"].shape,
-                                     dtype=np.float32)  # np.uint8
+        state_agent = gym.spaces.Box(
+            low=-10.0,
+            high=10.0,
+            shape=obs_sample[self._learner_domain_name]["state"].shape,
+            dtype=np.float32)  # np.uint8
 
-        image_agent = gym.spaces.Box(low=0,
-                                     high=255,
-                                     shape=obs_sample["image"].shape,
-                                     dtype=np.float32)  # np.uint8
+        image_agent = gym.spaces.Box(
+            low=0,
+            high=255,
+            shape=obs_sample[self._learner_domain_name]["image"].shape,
+            dtype=np.float32)  # np.uint8
 
         observation_agent = gym.spaces.Dict(state=state_agent,
                                             image=image_agent)
         # self._observation_space = observation_space_agent
 
         self._observation_space = gym.spaces.Dict(
-            observation_agent=observation_agent,
-            observation_expert=state_agent)
+            observation_learner=observation_agent,
+            observation_teacher=state_agent)  # teacher only have state input
 
+        # self._observation_space = gym.spaces.Dict()
+        # self._observation_space.update(
+        #     self._learner_domain_name=observation_agent)
+        # self._observation_space[self._teacher_domain_name] = state_agent
+        # teacher only have state input
         # the range for the control space should be increased as well
         control_space_agent = gym.spaces.Box(low=-10.0,
                                              high=10.0,
@@ -379,9 +389,10 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
         #     control_agent=control_space_agent,
         #     control_expert=control_space_expert)
 
+        # should be adapted is necessary
         self._action_space = gym.spaces.Dict(
-            control_agent=control_space_agent,
-            control_expert=control_space_expert)
+            control_learner=control_space_agent,
+            control_teacher=control_space_expert)
 
     @property
     def observation_space(self):
@@ -399,8 +410,8 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
         """
         Args:
             action (dict|int): If with_language, action is a dictionary with key "control" and "sentence".
-                    action['control_expert'] is a control vector for the expert
-                    action['control_agent']  is a control vector for the agent
+                    action['control_teacher'] is a control vector for the expert
+                    action['control_learner']  is a control vector for the agent
                     len(_joint_names).
 
         Returns:
@@ -412,12 +423,12 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
         #controls = action['control']
         if self._demo_step_cnt < self._demo_steps:  # demo phase
             self._demo_step_cnt += 1
-            controls = action['control_expert']
+            controls = action['control_teacher']
             controls = dict(zip(self._joint_names_expert, controls))
             teacher_action = self._teacher.teach(sentence)
             self._expert.take_action(controls)
         else:
-            controls = action['control_agent']
+            controls = action['control_learner']
             controls = dict(zip(self._joint_names, controls))
             teacher_action = self._teacher.teach(sentence)
             self._agent.take_action(controls)
@@ -461,8 +472,8 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
         img = self._get_camera_observation()
         if self._image_with_internal_states or self._with_language:
             # observation is an OrderedDict
-            obs = OrderedDict()
-            obs['image'] = img
+            observation_agent = OrderedDict()
+            observation_agent['image'] = img
             if self._image_with_internal_states:
                 states = self._get_internal_states(self._agent,
                                                    self._joint_names)
@@ -470,8 +481,14 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
                 states_expert = self._get_internal_states(
                     self._expert, self._joint_names_expert)
                 # we have expert states and not visible outside, thus aims to learn the mapping between visual image and states
-                obs['state'] = states
-                #obs = states
+                observation_agent['state'] = states
+
+                # obs = OrderedDict(observation_learner=observation_agent,
+                #                   observation_teacher=states_expert)
+
+                obs = OrderedDict()
+                obs[self._learner_domain_name] = observation_agent
+                obs[self._teacher_domain_name] = states_expert
 
             if self._with_language:
                 # obs['sentence'] = self._teacher.sentence_to_sequence(
