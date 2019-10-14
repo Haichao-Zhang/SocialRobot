@@ -288,8 +288,12 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
         self._agent = self._world.get_agent(self._agent_name)  # test, goal
         self._expert = self._world.get_agent(self._expert_name)  # expert
 
-        self._teacher_domain_name = "observation_teacher"
-        self._learner_domain_name = "observation_learner"
+        # expert training
+        self._teacher_domain_name = "observation_learner"
+        self._learner_domain_name = "observation_teacher"
+        # mimicing
+        # self._teacher_domain_name = "observation_teacher"
+        # self._learner_domain_name = "observation_learner"
 
         self._rendering_cam_pose = "4 -4 3 0 0.4 2.3"
         self._camera_link_name = "default::kuka_cam::kuka_wrap::camera_link::camera"
@@ -365,9 +369,16 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
                                             image=image_agent)
         # self._observation_space = observation_space_agent
 
-        self._observation_space = gym.spaces.Dict(
-            observation_learner=observation_agent,
-            observation_teacher=state_agent)  # teacher only have state input
+        if self._teacher_domain_name == "observation_teacher":
+            # mimicing phase
+            self._observation_space = gym.spaces.Dict(
+                observation_learner=observation_agent,
+                observation_teacher=state_agent)
+        elif self._teacher_domain_name == "observation_learner":
+            # mimicing phase
+            self._observation_space = gym.spaces.Dict(
+                observation_learner=state_agent,
+                observation_teacher=observation_agent)
 
         # self._observation_space = gym.spaces.Dict()
         # self._observation_space.update(
