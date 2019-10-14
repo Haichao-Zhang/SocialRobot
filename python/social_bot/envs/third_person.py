@@ -439,6 +439,13 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
             teacher_action = self._teacher.teach(sentence)
             self._expert.take_action(controls)
         else:
+            # both moves jointly
+            elf._demo_step_cnt += 1
+            controls = action['control_teacher']
+            controls = dict(zip(self._joint_names_expert, controls))
+            teacher_action = self._teacher.teach(sentence)
+            self._expert.take_action(controls)
+
             controls = action['control_learner']
             controls = dict(zip(self._joint_names, controls))
             teacher_action = self._teacher.teach(sentence)
