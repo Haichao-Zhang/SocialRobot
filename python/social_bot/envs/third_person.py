@@ -288,12 +288,12 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
         self._agent = self._world.get_agent(self._agent_name)  # test, goal
         self._expert = self._world.get_agent(self._expert_name)  # expert
 
-        # expert training
-        self._teacher_domain_name = "observation_learner"
-        self._learner_domain_name = "observation_teacher"
+        # # expert training
+        # self._teacher_domain_name = "observation_learner"
+        # self._learner_domain_name = "observation_teacher"
         # mimicing
-        # self._teacher_domain_name = "observation_teacher"
-        # self._learner_domain_name = "observation_learner"
+        self._teacher_domain_name = "observation_teacher"
+        self._learner_domain_name = "observation_learner"
 
         self._rendering_cam_pose = "4 -4 3 0 0.4 2.3"
         self._camera_link_name = "default::kuka_cam::kuka_wrap::camera_link::camera"
