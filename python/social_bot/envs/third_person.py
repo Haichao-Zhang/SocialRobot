@@ -18,6 +18,8 @@ import numpy as np
 import os
 import random
 import time
+from enum import Enum
+import types
 
 from absl import logging
 import gym
@@ -236,6 +238,11 @@ class ThirdPersonEnv(GazeboEnvBase):
         return obs
 
 
+class Phase(Enum):
+    TEACHER_PHASE = 1
+    LEARNER_PHASE = 2
+
+
 @gin.configurable
 class ThirdPersonAgentEnv(GazeboEnvBase):
     """
@@ -258,6 +265,7 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
     NUM_SIMULATION_STEPS = 20
 
     def __init__(self,
+                 training_phase: Phase,
                  with_goal=False,
                  with_language=False,
                  image_with_internal_states=False,
@@ -267,6 +275,7 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
         """Create ThirdPersonAgentEnv environment.
 
         Args:
+            training_phase (Phase): indicates in teacher or learning training phase
             with_language (bool): whether to generate language for observation
             image_with_internal_states (bool): If true, the agent's self internal
                 states i.e., joint position and velocities would be available
@@ -288,6 +297,8 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
         self._agent = self._world.get_agent(self._agent_name)  # test, goal
         self._expert = self._world.get_agent(self._expert_name)  # expert
 
+        self._training_phase = training_phase
+
         # # expert training
         # self._teacher_domain_name = "observation_learner"
         # self._learner_domain_name = "observation_teacher"
@@ -302,8 +313,12 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
         agent_loc, _ = self._agent.get_pose()
         self._fixed_agent_loc = np.array(agent_loc)
 
+        teacher_loc, _ = self._expert.get_pose()
+        self._fixed_teacher_loc = np.array(teacher_loc)
+
         self._demo_steps = 0  # number of demonstration steps
         self._demo_step_cnt = 0
+        self._max_steps = 500
 
         assert self._agent is not None
         logging.debug("joint names: %s" % self._agent.get_joint_names())
@@ -320,15 +335,24 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
 
         self._teacher = teacher.Teacher(task_groups_exclusive=False)
         task_group = teacher.TaskGroup()
+        if self._training_phase == Phase.TEACHER_PHASE:
+            task_group.add_task(
+                IsoGoalTask(fixed_agent_loc=self._fixed_teacher_loc,
+                            end_link_name=self._end_link_name,
+                            goal_name="goal",
+                            max_steps=self._max_steps,
+                            success_distance_thresh=0.5,
+                            random_range=1))
+        elif self._training_phase == Phase.LEARNER_PHASE:
+            task_group.add_task(
+                PoseGoalTask(expert_name=self._expert_name,
+                             expert_joints=self._joint_names_expert,
+                             agent_name=self._agent_name,
+                             agent_joints=self._joint_names,
+                             pose_func=self._get_internal_states,
+                             max_steps=self._max_steps,
+                             success_distance_thresh=0.5))
 
-        task_group.add_task(
-            PoseGoalTask(expert_name=self._expert_name,
-                         expert_joints=self._joint_names_expert,
-                         agent_name=self._agent_name,
-                         agent_joints=self._joint_names,
-                         pose_func=self._get_internal_states,
-                         max_steps=500,
-                         success_distance_thresh=0.5))
         self._teacher.add_task_group(task_group)
 
         self._seq_length = 20
@@ -440,7 +464,7 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
             self._expert.take_action(controls)
         else:
             # both moves jointly
-            elf._demo_step_cnt += 1
+            self._demo_step_cnt += 1
             controls = action['control_teacher']
             controls = dict(zip(self._joint_names_expert, controls))
             teacher_action = self._teacher.teach(sentence)
@@ -552,10 +576,21 @@ class ThirdPersonLanguage(ThirdPersonEnv):
                              port=port)
 
 
+class ThirdPersonTeacherLearning(ThirdPersonAgentEnv):
+    def __init__(self, port=None):
+        super(ThirdPersonTeacherLearning,
+              self).__init__(training_phase=Phase.TEACHER_PHASE,
+                             with_goal=True,
+                             with_language=False,
+                             image_with_internal_states=True,
+                             port=port)
+
+
 class ThirdPersonAgentLearning(ThirdPersonAgentEnv):
     def __init__(self, port=None):
         super(ThirdPersonAgentLearning,
-              self).__init__(with_goal=True,
+              self).__init__(training_phase=Phase.LEARNER_PHASE,
+                             with_goal=True,
                              with_language=False,
                              image_with_internal_states=True,
                              port=port)

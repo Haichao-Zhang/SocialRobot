@@ -4,6 +4,11 @@ import os
 from gym.envs.registration import register
 
 register(
+    id='SocialBot-Third-Person-Teacher-v0',
+    entry_point='social_bot.envs:ThirdPersonTeacherLearning',
+)
+
+register(
     id='SocialBot-Third-Person-Agent-v0',
     entry_point='social_bot.envs:ThirdPersonAgentLearning',
 )
