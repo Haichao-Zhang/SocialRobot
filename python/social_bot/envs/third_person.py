@@ -308,7 +308,9 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
 
         self._rendering_cam_pose = "4 -4 3 0 0.4 2.3"
         self._camera_link_name = "default::kuka_cam::kuka_wrap::camera_link::camera"
-        self._end_link_name = "kuka_cam::kuka_wrap::kuka_lwr_4plus::lwr_arm_7_link"
+
+        #self._end_link_name = "kuka_cam::kuka_wrap::kuka_lwr_4plus::lwr_arm_7_link"
+        self._end_link_name = "kuka_no_cam::kuka_lwr_4plus::lwr_arm_7_link"
 
         agent_loc, _ = self._agent.get_pose()
         self._fixed_agent_loc = np.array(agent_loc)
@@ -321,7 +323,10 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
         self._max_steps = 500
 
         assert self._agent is not None
-        logging.debug("joint names: %s" % self._agent.get_joint_names())
+        logging.debug("teacher joint names: %s" %
+                      self._expert.get_joint_names())
+        logging.debug("learner joint names: %s" %
+                      self._agent.get_joint_names())
         self._all_joints = self._agent.get_joint_names()
         # remove the fixed joints
         self._joint_names = list(
@@ -337,12 +342,14 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
         task_group = teacher.TaskGroup()
         if self._training_phase == Phase.TEACHER_PHASE:
             task_group.add_task(
-                IsoGoalTask(fixed_agent_loc=self._fixed_teacher_loc,
-                            end_link_name=self._end_link_name,
-                            goal_name="goal",
-                            max_steps=self._max_steps,
-                            success_distance_thresh=0.5,
-                            random_range=1))
+                IsoGoalTask(
+                    fixed_agent_loc=self._fixed_teacher_loc,
+                    end_link_name=self._end_link_name,
+                    goal_name="goal",
+                    agent_name=self._expert_name,  # set as expert
+                    max_steps=self._max_steps,
+                    success_distance_thresh=0.5,
+                    random_range=1))
         elif self._training_phase == Phase.LEARNER_PHASE:
             task_group.add_task(
                 PoseGoalTask(expert_name=self._expert_name,

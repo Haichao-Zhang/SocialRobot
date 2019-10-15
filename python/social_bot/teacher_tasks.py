@@ -165,6 +165,7 @@ class IsoGoalTask(teacher.Task):
     """
     def __init__(self,
                  fixed_agent_loc,
+                 agent_name,
                  end_link_name,
                  goal_name="goal",
                  max_steps=500,
@@ -183,6 +184,7 @@ class IsoGoalTask(teacher.Task):
         self._fixed_agent_loc = fixed_agent_loc
         self._end_link_name = end_link_name
         self._goal_name = goal_name
+        self._agent_name = agent_name
         self._success_distance_thresh = success_distance_thresh
         self._max_steps = max_steps
         self._random_range = random_range
@@ -203,8 +205,10 @@ class IsoGoalTask(teacher.Task):
             return loc
 
         agent_sentence = yield
-        agent.reset()  ## should reset to its initial loc #====>
+        #agent.reset()  ## should reset to its initial loc #====>
         goal = world.get_agent(self._goal_name)
+        # overwrite the input agent
+        agent = world.get_agent(self._agent_name)  # expert
 
         # goal_loc, _ = goal.get_pose()
         # print(goal_loc)

@@ -10,7 +10,8 @@ import os
 
 
 def main():
-    env = gym.make("SocialBot-Third-Person-v0")
+    # env = gym.make("SocialBot-Third-Person-v0")
+    env = gym.make("SocialBot-Third-Person-Teacher-v0")
     steps = 0
     t0 = time.time()
     proc = psutil.Process(os.getpid())
