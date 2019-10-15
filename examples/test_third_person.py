@@ -7,6 +7,7 @@ import logging
 import time
 import psutil
 import os
+import numpy as np
 
 
 def main():
@@ -20,8 +21,12 @@ def main():
         obs = env.reset()
         action_space = env.action_space
         while True:
-            control = [(random.random() - 0.5) * 100
-                       for i in range(action_space.shape[0])]
+            # control = [(random.random() - 0.5) * 100
+            #            for i in range(action_space.shape[0])]
+
+            control = [(np.random.rand(_action_.shape[0]) - 0.5) * 100
+                       for _action_ in action_space]
+            print(control)
             obs, reward, done, info = env.step(control)
             steps += 1
             if done:
