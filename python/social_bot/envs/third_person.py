@@ -411,10 +411,16 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
         # self._observation_space = gym.spaces.Tuple(
         #     (observation_agent, observation_teacher))
 
-        self._observation_space = gym.spaces.Dict((
-            (self._learner_domain_name, observation_agent),
-            (self._teacher_domain_name, observation_teacher),
-        ))
+        # self._observation_space = gym.spaces.Dict((
+        #     (self._learner_domain_name, observation_agent),
+        #     (self._teacher_domain_name, observation_teacher),
+        # ))
+        # self._observation_space = gym.spaces.Dict((
+        #     ("learner", observation_agent),
+        #     ("teacher", observation_teacher),
+        # ))
+        self._observation_space = gym.spaces.Dict(learner=observation_agent,
+                                                  teacher=state_agent)
 
         control_space_agent = gym.spaces.Box(low=-10.0,
                                              high=10.0,
@@ -435,10 +441,12 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
         # self._action_space = gym.spaces.Tuple(
         #     (control_space_agent, control_space_expert))
 
-        self._action_space = gym.spaces.Dict((
-            (self._learner_domain_name, control_space_agent),
-            (self._teacher_domain_name, control_space_expert),
-        ))
+        # self._action_space = gym.spaces.Dict((
+        #     (self._learner_domain_name, control_space_agent),
+        #     (self._teacher_domain_name, control_space_expert),
+        # ))
+        self._action_space = gym.spaces.Dict(learner=control_space_agent,
+                                             teacher=control_space_expert)
 
     @property
     def observation_space(self):
