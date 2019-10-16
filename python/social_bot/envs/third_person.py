@@ -306,6 +306,8 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
 
         self._learner_idx = 0
         self._teacher_idx = 1
+        self._learner_domain_name = "learner"
+        self._teacher_domain_name = "teacher"
 
         self._rendering_cam_pose = "4 -4 3 0 0.4 2.3"
         self._camera_link_name = "default::kuka_cam::kuka_wrap::camera_link::camera"
@@ -379,17 +381,18 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
 
         # Get observation dimension
         obs_sample = self._get_observation('[0 0 0]')
-
+        print("---------------")
+        print(obs_sample)
         state_agent = gym.spaces.Box(
             low=-10.0,
             high=10.0,
-            shape=obs_sample[self._learner_idx]["state"].shape,
+            shape=obs_sample[self._learner_domain_name]["state"].shape,
             dtype=np.float32)
 
         image_agent = gym.spaces.Box(
             low=0,
             high=255,
-            shape=obs_sample[self._learner_idx]["image"].shape,
+            shape=obs_sample[self._learner_domain_name]["image"].shape,
             dtype=np.float32)  # np.uint8
 
         observation_agent = gym.spaces.Dict(state=state_agent,
@@ -398,15 +401,20 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
         observation_teacher = gym.spaces.Box(
             low=-10.0,
             high=10.0,
-            shape=obs_sample[self._teacher_idx].shape,
+            shape=obs_sample[self._teacher_domain_name].shape,
             dtype=np.float32)
 
         # self._observation_space = [
         #     observation_agent,
         #     observation_teacher,
         # ]
-        self._observation_space = gym.spaces.Tuple(
-            (observation_agent, observation_teacher))
+        # self._observation_space = gym.spaces.Tuple(
+        #     (observation_agent, observation_teacher))
+
+        self._observation_space = gym.spaces.Dict((
+            (self._learner_domain_name, observation_agent),
+            (self._teacher_domain_name, observation_teacher),
+        ))
 
         control_space_agent = gym.spaces.Box(low=-10.0,
                                              high=10.0,
@@ -424,8 +432,13 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
         #     control_space_expert,
         # ]
 
-        self._action_space = gym.spaces.Tuple(
-            (control_space_agent, control_space_expert))
+        # self._action_space = gym.spaces.Tuple(
+        #     (control_space_agent, control_space_expert))
+
+        self._action_space = gym.spaces.Dict((
+            (self._learner_domain_name, control_space_agent),
+            (self._teacher_domain_name, control_space_expert),
+        ))
 
     @property
     def observation_space(self):
@@ -456,19 +469,19 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
         #controls = action['control']
         if self._demo_step_cnt < self._demo_steps:  # demo phase
             self._demo_step_cnt += 1
-            controls = action[self._teacher_idx]
+            controls = action[self._teacher_domain_name]
             controls = dict(zip(self._joint_names_expert, controls))
             teacher_action = self._teacher.teach(sentence)
             self._expert.take_action(controls)
         else:
             # both moves jointly
             self._demo_step_cnt += 1
-            controls = action[self._teacher_idx]
+            controls = action[self._teacher_domain_name]
             controls = dict(zip(self._joint_names_expert, controls))
             teacher_action = self._teacher.teach(sentence)
             self._expert.take_action(controls)
 
-            controls = action[self._learner_idx]
+            controls = action[self._learner_domain_name]
             controls = dict(zip(self._joint_names, controls))
             teacher_action = self._teacher.teach(sentence)
             self._agent.take_action(controls)
@@ -526,13 +539,10 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
                 # obs = OrderedDict(observation_learner=observation_agent,
                 #                   observation_teacher=states_expert)
 
-                # obs = OrderedDict()
-                # obs[self._learner_domain_name] = observation_agent
-                # obs[self._teacher_domain_name] = states_expert
-                obs = [
-                    observation_agent,
-                    states_expert,
-                ]
+                obs = OrderedDict()
+                obs[self._learner_domain_name] = observation_agent
+                obs[self._teacher_domain_name] = states_expert
+                # obs = gym.spaces.Tuple((observation_agent, states_expert))
 
             if self._with_language:
                 # obs['sentence'] = self._teacher.sentence_to_sequence(
