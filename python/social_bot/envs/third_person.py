@@ -401,10 +401,12 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
             shape=obs_sample[self._teacher_idx].shape,
             dtype=np.float32)
 
-        self._observation_space = [
-            observation_agent,
-            observation_teacher,
-        ]
+        # self._observation_space = [
+        #     observation_agent,
+        #     observation_teacher,
+        # ]
+        self._observation_space = gym.spaces.Tuple(
+            (observation_agent, observation_teacher))
 
         control_space_agent = gym.spaces.Box(low=-10.0,
                                              high=10.0,
@@ -417,10 +419,13 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
             shape=[len(self._joint_names_expert)],
             dtype=np.float32)
 
-        self._action_space = [
-            control_space_agent,
-            control_space_expert,
-        ]
+        # self._action_space = [
+        #     control_space_agent,
+        #     control_space_expert,
+        # ]
+
+        self._action_space = gym.spaces.Tuple(
+            (control_space_agent, control_space_expert))
 
     @property
     def observation_space(self):
