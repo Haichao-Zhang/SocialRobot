@@ -8,6 +8,7 @@ import time
 import psutil
 import os
 import numpy as np
+from collections import OrderedDict
 
 
 def main():
@@ -22,11 +23,15 @@ def main():
         action_space = env.action_space
         print(action_space)
         while True:
-            # control = [(random.random() - 0.5) * 100
-            #            for i in range(action_space.shape[0])]
+            ctl = [(random.random() - 0.5) * 100] * 7
 
-            control = [(np.random.rand(_action_.shape[0]) - 0.5) * 100
-                       for _action_ in action_space]
+            control = OrderedDict(
+                learner=ctl,
+                teacher=ctl,
+            )
+
+            # control = [(np.random.rand(_action_.shape[0]) - 0.5) * 100
+            #            for _action_ in action_space]
             print(control)
             obs, reward, done, info = env.step(control)
             steps += 1
