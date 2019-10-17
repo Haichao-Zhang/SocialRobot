@@ -323,7 +323,7 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
 
         self._demo_steps = 0  # number of demonstration steps
         self._demo_step_cnt = 0
-        self._max_steps = 500
+        self._max_steps = 50
 
         assert self._agent is not None
         logging.debug("teacher joint names: %s" %
@@ -489,7 +489,6 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
 
             controls = action[self._learner_domain_name]
             controls = dict(zip(self._joint_names, controls))
-            teacher_action = self._teacher.teach(sentence)
             self._agent.take_action(controls)
 
         self._world.step(self.NUM_SIMULATION_STEPS)
@@ -575,6 +574,7 @@ class ThirdPersonTeacherLearning(ThirdPersonAgentEnv):
                              with_goal=True,
                              with_language=False,
                              image_with_internal_states=True,
+                             data_format='channels_last',
                              port=port)
 
 
@@ -585,6 +585,7 @@ class ThirdPersonAgentLearning(ThirdPersonAgentEnv):
                              with_goal=True,
                              with_language=False,
                              image_with_internal_states=True,
+                             data_format='channels_last',
                              port=port)
 
 
