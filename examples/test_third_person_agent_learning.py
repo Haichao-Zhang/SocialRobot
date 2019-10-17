@@ -18,12 +18,13 @@ def main():
     for _ in range(10000000):
         obs = env.reset()
         action_space = env.action_space
+        print(action_space)
         while True:
             control = [(random.random() - 0.5) * 100
                        for i in range(action_space.shape[0])]
             action = {
-                "control_expert": control,
-                "control_agent": control,
+                "learner": control,
+                "teacher": control,
             }
             obs, reward, done, info = env.step(action)
             steps += 1

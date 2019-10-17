@@ -26,7 +26,7 @@ from social_bot.teacher import TeacherAction
 import social_bot.pygazebo as gazebo
 
 from absl import logging
-logging.set_verbosity(logging.DEBUG)
+#logging.set_verbosity(logging.DEBUG)
 
 
 class GoalTask(teacher.Task):
@@ -220,6 +220,13 @@ class IsoGoalTask(teacher.Task):
 
         loc = self._fixed_agent_loc
         self._move_goal_relative(goal, loc, loc)
+
+        # compute initial end-target distance
+        end_loc = get_agent_end_loc()  # current end pos
+        end_loc = np.array(end_loc)
+        goal_loc, _ = goal.get_pose()
+        self._prev_dist = np.linalg.norm(end_loc - goal_loc)
+
         steps_since_last_reward = 0
         while steps_since_last_reward < self._max_steps:
             steps_since_last_reward += 1
@@ -250,15 +257,18 @@ class IsoGoalTask(teacher.Task):
                 loc = self._fixed_agent_loc
                 self._move_goal_relative(goal, loc, loc)
                 self._goal_loc = None
-                self._prev_dist = 1000
             else:
                 logging.debug("_prevdist " + str(self._prev_dist) + "dist: " +
                               str(dist))
+
+                #shaping_reward = -0.01
+                #shaping_reward = -0.01 + 0.1 * (self._prev_dist - dist)
                 if dist < self._prev_dist:
                     self._prev_dist = dist
-                    # 1.5 ~ sqrt(2)
-                    #shaping_reward = -0.01 + 0.1 * (1.5 - np.min([dist, 1.5]))
-                shaping_reward = 0.1 * (self._prev_dist - dist)
+
+                # 1.5 ~ sqrt(2)
+                shaping_reward = -0.01 + 0.1 * (1.5 - np.min([dist, 1.5]))
+
                 #print(shaping_reward)
                 # else:
                 #     shaping_reward = -0.1
@@ -269,7 +279,6 @@ class IsoGoalTask(teacher.Task):
         logging.debug("loc: " + str(loc) + " goal: " + str(goal_loc) +
                       "dist: " + str(dist))
         # reset before the FAILURE end
-        self._prev_dist = 1000
         yield TeacherAction(reward=-1.0, sentence=goal_loc_str, done=True)
 
     def _move_goal(self, goal, agent_loc):

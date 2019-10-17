@@ -381,8 +381,6 @@ class ThirdPersonAgentEnv(GazeboEnvBase):
 
         # Get observation dimension
         obs_sample = self._get_observation('[0 0 0]')
-        print("---------------")
-        print(obs_sample)
         state_agent = gym.spaces.Box(
             low=-10.0,
             high=10.0,
@@ -618,5 +616,5 @@ def main():
 
 
 if __name__ == "__main__":
-    logging.set_verbosity(logging.DEBUG)
+    logging.set_verbosity(logging.INFO)
     main()

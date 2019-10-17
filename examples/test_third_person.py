@@ -23,7 +23,7 @@ def main():
         action_space = env.action_space
         print(action_space)
         while True:
-            ctl = [(random.random() - 0.5) * 100] * 7
+            ctl = [(random.random() - 0.5) * 100 for i in range(7)]
 
             control = OrderedDict(
                 learner=ctl,
@@ -32,7 +32,7 @@ def main():
 
             # control = [(np.random.rand(_action_.shape[0]) - 0.5) * 100
             #            for _action_ in action_space]
-            print(control)
+            #print(control)
             obs, reward, done, info = env.step(control)
             steps += 1
             if done:
@@ -44,5 +44,5 @@ def main():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
     main()
